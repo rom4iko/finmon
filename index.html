@@ -1,4 +1,701 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="uk" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Фінанси — Контроль бюджету</title>
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & THEME VARIABLES (Neo-Fintech Dark & Light)
+       ========================================================================== */
+    :root {
+      --bg-app: #0f1115;
+      --bg-card: #181b21;
+      --bg-card-elevated: #20242c;
+      --bg-input: #13161b;
+      --border-subtle: #262a34;
+      --border-strong: #323846;
+
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-blue-soft: rgba(37, 99, 235, 0.14);
+
+      --income-color: #10b981;
+      --income-soft: rgba(16, 185, 129, 0.14);
+
+      --expense-color: #ef4444;
+      --expense-soft: rgba(239, 68, 68, 0.14);
+
+      --warning-color: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
+
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
+      --shadow-fab: 0 8px 24px rgba(37, 99, 235, 0.45);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --nav-height: 70px;
+    }
+
+    [data-theme="light"] {
+      --bg-app: #f3f5f9;
+      --bg-card: #ffffff;
+      --bg-card-elevated: #f8fafc;
+      --bg-input: #f1f5f9;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+
+      --accent-blue: #2563eb;
+      --accent-blue-hover: #1d4ed8;
+      --accent-blue-soft: rgba(37, 99, 235, 0.1);
+
+      --income-color: #059669;
+      --income-soft: rgba(5, 150, 105, 0.12);
+
+      --expense-color: #dc2626;
+      --expense-soft: rgba(220, 38, 38, 0.1);
+
+      --warning-color: #d97706;
+      --warning-soft: rgba(217, 119, 6, 0.12);
+
+      --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.05);
+      --shadow-fab: 0 8px 20px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ==========================================================================
+       RESET & BASE LAYOUT
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      line-height: 1.45;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Mobile-first centered shell (max 480px on desktop) */
+    .app-shell {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--nav-height) + 28px);
+    }
+
+    @media (min-width: 520px) {
+      body {
+        background-color: #090a0d;
+      }
+      [data-theme="light"] body {
+        background-color: #e2e8f0;
+      }
+      .app-shell {
+        background-color: var(--bg-app);
+        border-left: 1px solid var(--border-subtle);
+        border-right: 1px solid var(--border-subtle);
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    /* ==========================================================================
+       TOP HEADER & MONTH SELECTOR
+       ========================================================================== */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 10px;
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .month-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+
+    .month-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .month-btn:hover,
+    .month-btn:active {
+      background: var(--bg-card-elevated);
+      color: var(--text-primary);
+    }
+
+    .month-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 112px;
+      text-align: center;
+      text-transform: capitalize;
+    }
+
+    /* ==========================================================================
+       TAB VIEWS CONTAINER
+       ========================================================================== */
+    .view-section {
+      display: none;
+      padding: 8px 18px 20px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       HOME VIEW: BALANCE HERO & SUMMARY CARDS
+       ========================================================================== */
+    .balance-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px 20px 14px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .balance-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .balance-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .balance-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+
+    .balance-amount {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+
+    .sparkline-wrap {
+      width: 100%;
+      height: 44px;
+      display: block;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .summary-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .summary-icon.income {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .summary-icon.expense {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .summary-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .summary-value {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .summary-value.income {
+      color: var(--income-color);
+    }
+
+    .summary-value.expense {
+      color: var(--expense-color);
+    }
+
+    /* ==========================================================================
+       TRANSACTIONS LIST
+       ========================================================================== */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .section-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .tx-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      gap: 12px;
+    }
+
+    .tx-item:last-child {
+      border-bottom: none;
+    }
+
+    .tx-item:hover,
+    .tx-item:active {
+      background: var(--bg-card-elevated);
+    }
+
+    .tx-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tx-cat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tx-cat-icon.income {
+      background: var(--income-soft);
+      border-color: transparent;
+      color: var(--income-color);
+    }
+
+    .tx-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .tx-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .tx-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .tx-amount {
+      font-size: 15px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .tx-amount.income {
+      color: var(--income-color);
+    }
+
+    .tx-amount.expense {
+      color: var(--text-primary);
+    }
+
+    .tx-delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .tx-delete-btn:hover {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 12px;
+      border-radius: 14px;
+      background: var(--bg-card-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .empty-state span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       ANALYTICS VIEW
+       ========================================================================== */
+    .analytics-overview {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .ratio-bar-track {
+      height: 10px;
+      background: var(--bg-input);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      margin: 12px 0;
+    }
+
+    .ratio-bar-income {
+      background: var(--income-color);
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .ratio-bar-expense {
+      background: var(--expense-color);
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .ratio-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .cat-breakdown-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .cat-row {
+      margin-bottom: 16px;
+    }
+
+    .cat-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .cat-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .cat-row-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .cat-row-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cat-row-pct {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-card-elevated);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .cat-row-sum {
+      font-weight: 700;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-input);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* ==========================================================================
+       DATA & SETTINGS VIEW
+       ========================================================================== */
+    .settings-group {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 14px;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-text h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .settings-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .btn {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card-elevated);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-blue-hover);
+    }
+
+    .btn-danger {
+      background: var(--expense-soft);
+      border-color: transparent;
+      color: var(--expense-color);
+    }
+
+    .btn-danger:hover {
+      background: var(--expense-color);
+      color: #ffffff;
+    }
+
+    /* Theme segmented switch */
+    .theme-switch {
+      display: inline-flex;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+
+    .theme-opt {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-opt.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
     /* ==========================================================================
        FLOATING ACTION BUTTON (+) & BOTTOM NAVIGATION BAR
        ========================================================================== */
@@ -56,7 +753,928 @@
       z-index: 50;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-<!-- ... existing code ... -->
+
+    .nav-item {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .nav-item.active {
+      color: var(--accent-blue);
+    }
+
+    /* ==========================================================================
+       BOTTOM SHEET MODAL (ADD / EDIT TRANSACTION)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeOverlay 0.2s ease;
+    }
+
+    @keyframes fadeOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      border-top: 1px solid var(--border-subtle);
+      padding: 12px 20px 28px;
+      max-height: 92vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 38px;
+      height: 4px;
+      background: var(--border-strong);
+      border-radius: 999px;
+      margin: 0 auto 14px;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .close-sheet-btn {
+      background: var(--bg-card-elevated);
+      border: none;
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .type-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .type-btn.active.expense {
+      background: var(--expense-color);
+      color: #ffffff;
+    }
+
+    .type-btn.active.income {
+      background: var(--income-color);
+      color: #ffffff;
+    }
+
+    .amount-input-wrap {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .amount-input-wrap:focus-within {
+      border-color: var(--accent-blue);
+    }
+
+    .amount-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 28px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .currency-tag {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-left: 8px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .cat-chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.15s ease;
+    }
+
+    .cat-chip span {
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .cat-chip.selected {
+      background: var(--accent-blue-soft);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .meta-inputs {
+      display: grid;
+      grid-template-columns: 135px 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .text-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 11px 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .text-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .submit-btn:hover {
+      background: var(--accent-blue-hover);
+    }
+
+    /* ==========================================================================
+       CUSTOM TOAST & CONFIRM DIALOG (NO alert/confirm)
+       ========================================================================== */
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--bg-card-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      z-index: 200;
+      transition: transform 0.25s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .confirm-box {
+      width: 90%;
+      max-width: 360px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin: auto;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .confirm-box h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    .confirm-box p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+    }
+
+    .confirm-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       MARKET & SMART ADVISOR TAB (#view-market)
+       ========================================================================== */
+    .market-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .market-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--income-color);
+      flex-shrink: 0;
+    }
+
+    .status-dot.fallback {
+      background: var(--warning-color);
+    }
+
+    .quotes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .quote-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .quote-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quote-symbol {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .quote-subtag {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .change-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .change-pill.up {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .change-pill.down {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .change-pill.flat {
+      background: var(--bg-card-elevated);
+      color: var(--text-secondary);
+    }
+
+    .quote-price {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .quote-secondary {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .advisor-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .advisor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .advisor-card.good {
+      border-left-color: var(--income-color);
+    }
+
+    .advisor-card.warn {
+      border-left-color: var(--warning-color);
+    }
+
+    .advisor-card.danger {
+      border-left-color: var(--expense-color);
+    }
+
+    .advisor-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .advisor-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .advisor-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+      white-space: nowrap;
+    }
+
+    .advisor-card.good .advisor-badge {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .advisor-card.warn .advisor-badge {
+      background: var(--warning-soft);
+      color: var(--warning-color);
+    }
+
+    .advisor-card.danger .advisor-badge {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .advisor-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .advisor-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .metric-chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    .calc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 20px;
+    }
+
+    .calc-type-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 12px;
+    }
+
+    .calc-mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 6px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .calc-mode-btn.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .calc-inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 125px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .calc-asset-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    .calc-result {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    .calc-result.visible {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .verdict-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .verdict-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .verdict-badge.ok {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .verdict-badge.caution {
+      background: var(--warning-soft);
+      color: var(--warning-color);
+    }
+
+    .verdict-badge.no {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .calc-details {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .news-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .news-item {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.15s ease;
+    }
+
+    .news-item:last-child {
+      border-bottom: none;
+    }
+
+    .news-item:hover,
+    .news-item:active {
+      background: var(--bg-card-elevated);
+    }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .sentiment-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .sentiment-tag.bull {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .sentiment-tag.bear {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .sentiment-tag.macro {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+
+    .news-source {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .news-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div class="app-shell">
+    <!-- Top Header with Month Filter -->
+    <header class="top-bar">
+      <div class="app-title">Фінанси</div>
+      <div class="month-switcher" aria-label="Вибір місяця">
+        <button type="button" class="month-btn" id="prevMonthBtn" title="Попередній місяць">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="month-label" id="currentMonthLabel">Листопад 2026</div>
+        <button type="button" class="month-btn" id="nextMonthBtn" title="Наступний місяць">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================================
+         TAB 1: ГОЛОВНА (HOME)
+         ====================================================================== -->
+    <main id="view-home" class="view-section active">
+      <!-- Total Balance Card -->
+      <section class="balance-card">
+        <div class="balance-meta">
+          <span class="balance-label">Загальний баланс</span>
+          <span class="balance-badge">UAH</span>
+        </div>
+        <div class="balance-amount tabular" id="totalBalanceDisplay">0 ₴</div>
+        <svg id="balanceSparkline" class="sparkline-wrap" viewBox="0 0 320 44" preserveAspectRatio="none"></svg>
+      </section>
+
+      <!-- Side-by-side Monthly Income & Expense Cards -->
+      <section class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="summary-icon income">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </div>
+            <span class="summary-title">Доходи</span>
+          </div>
+          <div class="summary-value income tabular" id="monthIncomeDisplay">+0 ₴</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="summary-icon expense">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="7" x2="17" y2="17"/><polyline points="17 7 17 17 7 17"/></svg>
+            </div>
+            <span class="summary-title">Витрати</span>
+          </div>
+          <div class="summary-value expense tabular" id="monthExpenseDisplay">-0 ₴</div>
+        </div>
+      </section>
+
+      <!-- Transactions List -->
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Останні транзакції</h2>
+          <span class="section-count" id="txCountLabel">0 записів</span>
+        </div>
+        <div class="tx-list" id="transactionsList"></div>
+      </section>
+    </main>
+
+    <!-- ======================================================================
+         TAB 2: АНАЛІТИКА (ANALYTICS)
+         ====================================================================== -->
+    <section id="view-analytics" class="view-section">
+      <div class="analytics-overview">
+        <div class="section-header" style="margin-bottom: 4px;">
+          <h2 class="section-title">Співвідношення за місяць</h2>
+          <span class="section-count tabular" id="analyticsNetLabel">Різниця: 0 ₴</span>
+        </div>
+        <div class="ratio-bar-track">
+          <div class="ratio-bar-income" id="ratioIncomeBar" style="width: 50%"></div>
+          <div class="ratio-bar-expense" id="ratioExpenseBar" style="width: 50%"></div>
+        </div>
+        <div class="ratio-legend">
+          <div class="legend-item">
+            <span class="dot" style="background: var(--income-color);"></span>
+            <span>Доходи: <strong class="tabular" id="analyticsIncomeText">0 ₴</strong></span>
+          </div>
+          <div class="legend-item">
+            <span class="dot" style="background: var(--expense-color);"></span>
+            <span>Витрати: <strong class="tabular" id="analyticsExpenseText">0 ₴</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Витрати за категоріями</h2>
+      </div>
+      <div class="cat-breakdown-card" id="categoryBreakdownList"></div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 3: РИНОК ТА АНАЛІТИЧНИЙ РАДНИК (MARKET & SMART ADVISOR)
+         ====================================================================== -->
+    <section id="view-market" class="view-section">
+      <div class="market-toolbar">
+        <div class="market-status" id="marketStatusText">
+          <span class="status-dot" id="marketStatusDot"></span>
+          <span>Завантаження котирувань...</span>
+        </div>
+        <button type="button" class="btn" id="refreshMarketBtn" style="padding: 6px 11px; font-size: 12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>Оновити</span>
+        </button>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Валюти та Крипторинок</h2>
+        <span class="section-count">24 год</span>
+      </div>
+      <div class="quotes-grid" id="marketQuotesGrid"></div>
+
+      <div class="section-header">
+        <h2 class="section-title">Аналітичний радник</h2>
+        <span class="section-count">На основі твоїх даних</span>
+      </div>
+      <div class="advisor-stack" id="advisorSignalsList"></div>
+
+      <div class="section-header">
+        <h2 class="section-title">Чи варто купувати?</h2>
+        <span class="section-count">Перевірка бюджету</span>
+      </div>
+      <div class="calc-card">
+        <div class="calc-type-row">
+          <button type="button" class="calc-mode-btn active" data-calc-mode="purchase">Покупка / Витрата</button>
+          <button type="button" class="calc-mode-btn" data-calc-mode="invest">Валюта / Крипта</button>
+        </div>
+
+        <div id="calcAssetWrap" style="display: none;">
+          <select id="calcAssetSelect" class="calc-asset-select" aria-label="Оберіть актив">
+            <option value="USD">Долар США (USD)</option>
+            <option value="EUR">Євро (EUR)</option>
+            <option value="BTC">Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="SOL">Solana (SOL)</option>
+            <option value="TON">Toncoin (TON)</option>
+          </select>
+        </div>
+
+        <div class="calc-inputs-row">
+          <input
+            type="text"
+            id="calcNameInput"
+            class="text-input"
+            placeholder="Що плануєш купити?"
+            maxlength="40"
+          />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="calcAmountInput"
+            class="text-input tabular"
+            placeholder="Сума, ₴"
+          />
+        </div>
+
+        <button type="button" class="btn btn-primary" id="runFeasibilityBtn" style="width: 100%; justify-content: center; padding: 11px;">
+          Проаналізувати рішення
+        </button>
+
+        <div class="calc-result" id="calcResultBox">
+          <div class="verdict-row">
+            <strong style="font-size: 13px;" id="calcVerdictTitle">Результат аналізу</strong>
+            <span class="verdict-badge ok" id="calcVerdictBadge">Доцільно</span>
+          </div>
+          <div class="calc-details" id="calcVerdictDetails"></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Стрічка новин та сигналів</h2>
+        <span class="section-count" id="newsCountLabel">Ринковий фон</span>
+      </div>
+      <div class="news-list" id="marketNewsList"></div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 4: ДАНІ ТА НАЛАШТУВАННЯ (DATA & SETTINGS)
+         ====================================================================== -->
+    <section id="view-data" class="view-section">
+      <div class="section-header">
+        <h2 class="section-title">Оформлення</h2>
+      </div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Тема інтерфейсу</h4>
+            <p>Темна або світла палітра екрана</p>
+          </div>
+          <div class="theme-switch">
+            <button type="button" class="theme-opt active" data-set-theme="dark">Темна</button>
+            <button type="button" class="theme-opt" data-set-theme="light">Світла</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Резервне копіювання</h2>
+      </div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Експорт у JSON</h4>
+            <p>Повна резервна копія всіх записів</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="exportJsonBtn">Зберегти JSON</button>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Імпорт із JSON</h4>
+            <p>Відновити дані з резервного файлу</p>
+          </div>
+          <label class="btn" style="cursor: pointer;">
+            Завантажити
+            <input type="file" id="importJsonInput" accept=".json,application/json" style="display: none;" />
+          </label>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Експорт у CSV (Excel)</h4>
+            <p>Таблиця транзакцій для відкриття в Excel</p>
+          </div>
+          <button type="button" class="btn" id="exportCsvBtn">Скачати CSV</button>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Управління базою</h2>
+      </div>
+      <div class="settings-group">
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Очистити всі дані</h4>
+            <p>Видалити всі транзакції з цього пристрою</p>
+          </div>
+          <button type="button" class="btn btn-danger" id="clearAllBtn">Очистити</button>
+        </div>
+      </div>
+    </section>
+
     <!-- Floating Action Button (+) -->
     <div class="fab-container" id="fabContainer">
       <button type="button" class="fab-btn" id="openAddModalBtn" aria-label="Додати транзакцію">
@@ -66,4 +1684,1479 @@
 
     <!-- Fixed Bottom Navigation Bar (4 Tabs) -->
     <nav class="bottom-nav" aria-label="Головна навігація">
-<!-- ... existing code ... -->
+      <button type="button" class="nav-item active" data-tab="home">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Головна</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="analytics">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Аналітика</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="market">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Ринок</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="data">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <span>Дані</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ========================================================================
+       ADD / EDIT TRANSACTION BOTTOM SHEET MODAL
+       ======================================================================== -->
+  <div class="modal-backdrop" id="txModalBackdrop">
+    <div class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="modalTitle">Нова операція</h3>
+        <button type="button" class="close-sheet-btn" id="closeModalBtn" aria-label="Закрити">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="txForm">
+        <input type="hidden" id="txIdInput" value="" />
+
+        <!-- Type Switch -->
+        <div class="type-toggle">
+          <button type="button" class="type-btn active expense" data-tx-type="expense">Витрата</button>
+          <button type="button" class="type-btn" data-tx-type="income">Дохід</button>
+        </div>
+
+        <!-- Amount Input -->
+        <div class="amount-input-wrap">
+          <input
+            type="text"
+            inputmode="decimal"
+            id="txAmountInput"
+            class="amount-input tabular"
+            placeholder="0"
+            autocomplete="off"
+            required
+          />
+          <span class="currency-tag">₴</span>
+        </div>
+
+        <!-- Category Chips -->
+        <label class="field-label">Категорія</label>
+        <div class="category-grid" id="categoryGrid"></div>
+
+        <!-- Date & Optional Note -->
+        <div class="meta-inputs">
+          <div>
+            <label class="field-label" for="txDateInput">Дата</label>
+            <input type="date" id="txDateInput" class="text-input tabular" required />
+          </div>
+          <div>
+            <label class="field-label" for="txNoteInput">Примітка (необов'язково)</label>
+            <input type="text" id="txNoteInput" class="text-input" placeholder="Наприклад: АТБ, кава..." maxlength="50" />
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="saveTxBtn">Зберегти операцію</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       CUSTOM CONFIRMATION DIALOG
+       ======================================================================== -->
+  <div class="modal-backdrop" id="confirmBackdrop">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">Підтвердження</h3>
+      <p id="confirmMessage">Ви впевнені?</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="confirmCancelBtn" style="justify-content: center;">Скасувати</button>
+        <button type="button" class="btn btn-danger" id="confirmOkBtn" style="justify-content: center;">Видалити</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ======================================================================
+         CONSTANTS, CATEGORIES & CLEAN SVG ICONS
+         ====================================================================== */
+      const STORAGE_KEY = "neo_finance_transactions_v1";
+      const THEME_KEY = "neo_finance_theme_v1";
+
+      const MONTHS_UK = [
+        "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+        "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"
+      ];
+
+      const CATEGORIES = {
+        expense: [
+          {
+            id: "food",
+            name: "Продукти",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>'
+          },
+          {
+            id: "cafe",
+            name: "Кафе",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>'
+          },
+          {
+            id: "transport",
+            name: "Транспорт",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M3 10h18"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="16.5" cy="18.5" r="1.5"/></svg>'
+          },
+          {
+            id: "utilities",
+            name: "Комунальні",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'
+          },
+          {
+            id: "telecom",
+            name: "Зв'язок",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'
+          },
+          {
+            id: "health",
+            name: "Здоров'я",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'
+          },
+          {
+            id: "clothes",
+            name: "Одяг",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>'
+          },
+          {
+            id: "other",
+            name: "Інше",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>'
+          }
+        ],
+        income: [
+          {
+            id: "salary",
+            name: "Зарплата",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
+          },
+          {
+            id: "extra",
+            name: "Додатково",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+          },
+          {
+            id: "refund",
+            name: "Повернення",
+            svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>'
+          }
+        ]
+      };
+
+      /* ======================================================================
+         APPLICATION STATE
+         ====================================================================== */
+      let transactions = [];
+      let selectedYear = 2026;
+      let selectedMonth = 10; // 0-indexed: 10 = Листопад (November)
+      let currentTab = "home";
+
+      // Form state
+      let formType = "expense";
+      let formCategoryId = "food";
+
+      /* ======================================================================
+         DOM REFERENCES
+         ====================================================================== */
+      const totalBalanceDisplay = document.getElementById("totalBalanceDisplay");
+      const balanceSparkline = document.getElementById("balanceSparkline");
+      const monthIncomeDisplay = document.getElementById("monthIncomeDisplay");
+      const monthExpenseDisplay = document.getElementById("monthExpenseDisplay");
+      const currentMonthLabel = document.getElementById("currentMonthLabel");
+      const transactionsList = document.getElementById("transactionsList");
+      const txCountLabel = document.getElementById("txCountLabel");
+
+      const analyticsNetLabel = document.getElementById("analyticsNetLabel");
+      const ratioIncomeBar = document.getElementById("ratioIncomeBar");
+      const ratioExpenseBar = document.getElementById("ratioExpenseBar");
+      const analyticsIncomeText = document.getElementById("analyticsIncomeText");
+      const analyticsExpenseText = document.getElementById("analyticsExpenseText");
+      const categoryBreakdownList = document.getElementById("categoryBreakdownList");
+
+      const txModalBackdrop = document.getElementById("txModalBackdrop");
+      const txForm = document.getElementById("txForm");
+      const modalTitle = document.getElementById("modalTitle");
+      const txIdInput = document.getElementById("txIdInput");
+      const txAmountInput = document.getElementById("txAmountInput");
+      const categoryGrid = document.getElementById("categoryGrid");
+      const txDateInput = document.getElementById("txDateInput");
+      const txNoteInput = document.getElementById("txNoteInput");
+
+      const confirmBackdrop = document.getElementById("confirmBackdrop");
+      const confirmTitle = document.getElementById("confirmTitle");
+      const confirmMessage = document.getElementById("confirmMessage");
+      const confirmCancelBtn = document.getElementById("confirmCancelBtn");
+      const confirmOkBtn = document.getElementById("confirmOkBtn");
+
+      /* ======================================================================
+         UTILITIES & FORMATTING
+         ====================================================================== */
+      function formatUAH(amount) {
+        const absVal = Math.abs(amount);
+        const hasDecimals = absVal % 1 !== 0;
+        const formatted = absVal.toLocaleString("uk-UA", {
+          minimumFractionDigits: hasDecimals ? 2 : 0,
+          maximumFractionDigits: 2
+        });
+        return `${formatted} ₴`;
+      }
+
+      function formatDateUA(isoDate) {
+        if (!isoDate) return "";
+        const [y, m, d] = isoDate.split("-");
+        return `${d}.${m}.${y}`;
+      }
+
+      function getTodayISO() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function getCategoryMeta(type, catId) {
+        const list = CATEGORIES[type] || [];
+        return list.find((c) => c.id === catId) || list[list.length - 1] || {
+          id: "other",
+          name: "Інше",
+          svg: CATEGORIES.expense[7].svg
+        };
+      }
+
+      let toastTimer = null;
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2400);
+      }
+
+      function customConfirm(title, message, okLabel = "Видалити") {
+        return new Promise((resolve) => {
+          confirmTitle.textContent = title;
+          confirmMessage.textContent = message;
+          confirmOkBtn.textContent = okLabel;
+          confirmBackdrop.classList.add("open");
+
+          const cleanup = (result) => {
+            confirmBackdrop.classList.remove("open");
+            confirmOkBtn.removeEventListener("click", onOk);
+            confirmCancelBtn.removeEventListener("click", onCancel);
+            resolve(result);
+          };
+
+          const onOk = () => cleanup(true);
+          const onCancel = () => cleanup(false);
+
+          confirmOkBtn.addEventListener("click", onOk);
+          confirmCancelBtn.addEventListener("click", onCancel);
+        });
+      }
+
+      /* ======================================================================
+         STORAGE & INITIAL SEED DATA
+         ====================================================================== */
+      function saveTransactions() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        } catch (err) {
+          showToast("Помилка збереження у пам'ять браузера");
+        }
+      }
+
+      function loadTransactions() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw === null) {
+            // First launch: seed with realistic sample transactions for November 2026
+            transactions = [
+              {
+                id: "seed-1",
+                type: "income",
+                amount: 32000,
+                category: "salary",
+                date: "2026-11-05",
+                note: "Основний дохід"
+              },
+              {
+                id: "seed-2",
+                type: "expense",
+                amount: 1450,
+                category: "food",
+                date: "2026-11-12",
+                note: "Супермаркет Сільпо"
+              },
+              {
+                id: "seed-3",
+                type: "expense",
+                amount: 1850,
+                category: "utilities",
+                date: "2026-11-15",
+                note: "Електроенергія та інтернет"
+              },
+              {
+                id: "seed-4",
+                type: "expense",
+                amount: 140,
+                category: "cafe",
+                date: "2026-11-19",
+                note: "Ранкова кава"
+              },
+              {
+                id: "seed-5",
+                type: "expense",
+                amount: 320,
+                category: "transport",
+                date: "2026-11-21",
+                note: "Проїзд та таксі"
+              }
+            ];
+            saveTransactions();
+          } else {
+            const parsed = JSON.parse(raw);
+            transactions = Array.isArray(parsed) ? parsed : [];
+          }
+        } catch (err) {
+          transactions = [];
+        }
+      }
+
+      function applyTheme(theme) {
+        const validTheme = theme === "light" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", validTheme);
+        localStorage.setItem(THEME_KEY, validTheme);
+
+        document.querySelectorAll(".theme-opt").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.setTheme === validTheme);
+        });
+      }
+
+      function initTheme() {
+        const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+        applyTheme(savedTheme);
+      }
+
+      /* ======================================================================
+         FILTERING & RENDERING
+         ====================================================================== */
+      function getMonthTransactions() {
+        const prefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
+        return transactions
+          .filter((tx) => tx.date && tx.date.startsWith(prefix))
+          .sort((a, b) => b.date.localeCompare(a.date));
+      }
+
+      function renderSparkline(monthTxs) {
+        // Build cumulative trend line across the month's sorted transactions
+        const sorted = [...monthTxs].sort((a, b) => a.date.localeCompare(b.date));
+        const points = [0];
+        let running = 0;
+
+        sorted.forEach((tx) => {
+          running += tx.type === "income" ? tx.amount : -tx.amount;
+          points.push(running);
+        });
+
+        if (points.length < 2) {
+          points.push(0);
+        }
+
+        const width = 320;
+        const height = 44;
+        const padY = 6;
+        const minVal = Math.min(...points);
+        const maxVal = Math.max(...points);
+        const range = maxVal - minVal || 1;
+
+        const coords = points.map((val, idx) => {
+          const x = (idx / (points.length - 1)) * width;
+          const norm = (val - minVal) / range;
+          const y = height - padY - norm * (height - padY * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        });
+
+        const polylinePoints = coords.join(" ");
+        const areaPoints = `0,${height} ${polylinePoints} ${width},${height}`;
+
+        balanceSparkline.innerHTML = `
+          <defs>
+            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563eb" stop-opacity="0.32" />
+              <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+          <polygon points="${areaPoints}" fill="url(#sparkGrad)" />
+          <polyline
+            fill="none"
+            stroke="#2563eb"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            points="${polylinePoints}"
+          />
+        `;
+      }
+
+      function renderHome(monthTxs) {
+        // Total balance across all recorded transactions
+        const totalBalance = transactions.reduce((sum, tx) => {
+          return sum + (tx.type === "income" ? tx.amount : -tx.amount);
+        }, 0);
+
+        const signPrefix = totalBalance < 0 ? "-" : "";
+        totalBalanceDisplay.textContent = `${signPrefix}${formatUAH(totalBalance)}`;
+
+        // Selected month income & expenses
+        let monthIncome = 0;
+        let monthExpense = 0;
+        monthTxs.forEach((tx) => {
+          if (tx.type === "income") monthIncome += tx.amount;
+          else monthExpense += tx.amount;
+        });
+
+        monthIncomeDisplay.textContent = `+${formatUAH(monthIncome)}`;
+        monthExpenseDisplay.textContent = `-${formatUAH(monthExpense)}`;
+
+        renderSparkline(monthTxs);
+
+        // Transactions list
+        txCountLabel.textContent = `${monthTxs.length} ${getPluralRecords(monthTxs.length)}`;
+
+        if (monthTxs.length === 0) {
+          transactionsList.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+              <p>Немає операцій за цей місяць</p>
+              <span>Натисніть «+» внизу, щоб додати дохід або витрату</span>
+            </div>
+          `;
+          return;
+        }
+
+        transactionsList.innerHTML = monthTxs
+          .map((tx) => {
+            const cat = getCategoryMeta(tx.type, tx.category);
+            const isIncome = tx.type === "income";
+            const formattedSum = `${isIncome ? "+" : "-"}${formatUAH(tx.amount)}`;
+            const subLine = tx.note
+              ? `${escapeHTML(tx.note)} • ${formatDateUA(tx.date)}`
+              : formatDateUA(tx.date);
+
+            return `
+              <div class="tx-item" data-edit-id="${tx.id}">
+                <div class="tx-left">
+                  <div class="tx-cat-icon ${isIncome ? "income" : ""}">
+                    ${cat.svg}
+                  </div>
+                  <div class="tx-info">
+                    <div class="tx-title">${escapeHTML(cat.name)}</div>
+                    <div class="tx-sub">${subLine}</div>
+                  </div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount tabular ${isIncome ? "income" : "expense"}">${formattedSum}</div>
+                  <button type="button" class="tx-delete-btn" data-delete-id="${tx.id}" title="Видалити">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAnalytics(monthTxs) {
+        let income = 0;
+        let expense = 0;
+        const byCategory = {};
+
+        monthTxs.forEach((tx) => {
+          if (tx.type === "income") {
+            income += tx.amount;
+          } else {
+            expense += tx.amount;
+            byCategory[tx.category] = (byCategory[tx.category] || 0) + tx.amount;
+          }
+        });
+
+        const net = income - expense;
+        const netSign = net > 0 ? "+" : net < 0 ? "-" : "";
+        analyticsNetLabel.textContent = `Різниця: ${netSign}${formatUAH(net)}`;
+        analyticsIncomeText.textContent = formatUAH(income);
+        analyticsExpenseText.textContent = formatUAH(expense);
+
+        const totalFlow = income + expense;
+        if (totalFlow === 0) {
+          ratioIncomeBar.style.width = "50%";
+          ratioExpenseBar.style.width = "50%";
+        } else {
+          const incPct = (income / totalFlow) * 100;
+          ratioIncomeBar.style.width = `${incPct}%`;
+          ratioExpenseBar.style.width = `${100 - incPct}%`;
+        }
+
+        const sortedCats = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+
+        if (sortedCats.length === 0) {
+          categoryBreakdownList.innerHTML = `
+            <div class="empty-state" style="padding: 24px 12px;">
+              <p>Витрат за цей місяць ще немає</p>
+              <span>Додайте витрати, щоб побачити структуру по категоріях</span>
+            </div>
+          `;
+          return;
+        }
+
+        categoryBreakdownList.innerHTML = sortedCats
+          .map(([catId, sum]) => {
+            const cat = getCategoryMeta("expense", catId);
+            const pct = expense > 0 ? Math.round((sum / expense) * 100) : 0;
+
+            return `
+              <div class="cat-row">
+                <div class="cat-row-top">
+                  <div class="cat-row-name">
+                    <span style="color: var(--accent-blue); display: flex;">${cat.svg}</span>
+                    <span>${escapeHTML(cat.name)}</span>
+                  </div>
+                  <div class="cat-row-stats">
+                    <span class="cat-row-pct tabular">${pct}%</span>
+                    <span class="cat-row-sum tabular">${formatUAH(sum)}</span>
+                  </div>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAll() {
+        currentMonthLabel.textContent = `${MONTHS_UK[selectedMonth]} ${selectedYear}`;
+        const monthTxs = getMonthTransactions();
+        renderHome(monthTxs);
+        renderAnalytics(monthTxs);
+        if (typeof renderAdvisor === "function") {
+          renderAdvisor();
+        }
+      }
+
+      function getPluralRecords(n) {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return "запис";
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "записи";
+        return "записів";
+      }
+
+      function escapeHTML(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /* ======================================================================
+         NAVIGATION & MONTH SWITCHING
+         ====================================================================== */
+      document.querySelectorAll(".nav-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetTab = btn.dataset.tab;
+          currentTab = targetTab;
+
+          document.querySelectorAll(".nav-item").forEach((el) => {
+            el.classList.toggle("active", el.dataset.tab === targetTab);
+          });
+
+          document.querySelectorAll(".view-section").forEach((sec) => {
+            sec.classList.toggle("active", sec.id === `view-${targetTab}`);
+          });
+
+          // Show FAB on Home & Analytics; hide on Market & Data tabs
+          const showFab = targetTab === "home" || targetTab === "analytics";
+          document.getElementById("fabContainer").style.display = showFab ? "flex" : "none";
+
+          if (targetTab === "market") {
+            renderAdvisor();
+            if (!marketState.hasLoadedOnce) {
+              refreshMarketData(false);
+            }
+          }
+        });
+      });
+
+      document.getElementById("prevMonthBtn").addEventListener("click", () => {
+        selectedMonth -= 1;
+        if (selectedMonth < 0) {
+          selectedMonth = 11;
+          selectedYear -= 1;
+        }
+        renderAll();
+      });
+
+      document.getElementById("nextMonthBtn").addEventListener("click", () => {
+        selectedMonth += 1;
+        if (selectedMonth > 11) {
+          selectedMonth = 0;
+          selectedYear += 1;
+        }
+        renderAll();
+      });
+
+      /* ======================================================================
+         ADD / EDIT TRANSACTION MODAL LOGIC
+         ====================================================================== */
+      function renderCategoryChips() {
+        const cats = CATEGORIES[formType];
+        if (!cats.some((c) => c.id === formCategoryId)) {
+          formCategoryId = cats[0].id;
+        }
+
+        categoryGrid.innerHTML = cats
+          .map(
+            (cat) => `
+            <button
+              type="button"
+              class="cat-chip ${cat.id === formCategoryId ? "selected" : ""}"
+              data-cat-id="${cat.id}"
+            >
+              ${cat.svg}
+              <span>${cat.name}</span>
+            </button>
+          `
+          )
+          .join("");
+      }
+
+      function setFormType(type) {
+        formType = type;
+        document.querySelectorAll(".type-btn").forEach((btn) => {
+          btn.classList.remove("active", "expense", "income");
+          if (btn.dataset.txType === type) {
+            btn.classList.add("active", type);
+          }
+        });
+        renderCategoryChips();
+      }
+
+      function openTransactionModal(txToEdit = null) {
+        if (txToEdit) {
+          modalTitle.textContent = "Редагувати операцію";
+          txIdInput.value = txToEdit.id;
+          formType = txToEdit.type;
+          formCategoryId = txToEdit.category;
+          txAmountInput.value = String(txToEdit.amount);
+          txDateInput.value = txToEdit.date;
+          txNoteInput.value = txToEdit.note || "";
+        } else {
+          modalTitle.textContent = "Нова операція";
+          txIdInput.value = "";
+          formType = "expense";
+          formCategoryId = "food";
+          txAmountInput.value = "";
+          // Default date inside selected month if viewing another month, otherwise today
+          const today = getTodayISO();
+          const selectedPrefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
+          txDateInput.value = today.startsWith(selectedPrefix) ? today : `${selectedPrefix}-01`;
+          txNoteInput.value = "";
+        }
+
+        setFormType(formType);
+        txModalBackdrop.classList.add("open");
+        setTimeout(() => txAmountInput.focus(), 100);
+      }
+
+      function closeTransactionModal() {
+        txModalBackdrop.classList.remove("open");
+      }
+
+      document.getElementById("openAddModalBtn").addEventListener("click", () => {
+        openTransactionModal(null);
+      });
+
+      document.getElementById("closeModalBtn").addEventListener("click", closeTransactionModal);
+
+      txModalBackdrop.addEventListener("click", (e) => {
+        if (e.target === txModalBackdrop) closeTransactionModal();
+      });
+
+      document.querySelectorAll(".type-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          setFormType(btn.dataset.txType);
+        });
+      });
+
+      categoryGrid.addEventListener("click", (e) => {
+        const chip = e.target.closest(".cat-chip");
+        if (!chip) return;
+        formCategoryId = chip.dataset.catId;
+        renderCategoryChips();
+      });
+
+      // Normalize decimal separator (, -> .)
+      txAmountInput.addEventListener("input", () => {
+        txAmountInput.value = txAmountInput.value
+          .replace(",", ".")
+          .replace(/[^0-9.]/g, "");
+      });
+
+      txForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const rawAmount = parseFloat(txAmountInput.value);
+        if (isNaN(rawAmount) || rawAmount <= 0) {
+          showToast("Введіть коректну суму більше 0");
+          txAmountInput.focus();
+          return;
+        }
+
+        const cleanAmount = Math.round(rawAmount * 100) / 100;
+        const dateVal = txDateInput.value || getTodayISO();
+        const noteVal = txNoteInput.value.trim();
+        const editId = txIdInput.value;
+
+        if (editId) {
+          const idx = transactions.findIndex((t) => t.id === editId);
+          if (idx !== -1) {
+            transactions[idx] = {
+              ...transactions[idx],
+              type: formType,
+              amount: cleanAmount,
+              category: formCategoryId,
+              date: dateVal,
+              note: noteVal
+            };
+            showToast("Операцію оновлено");
+          }
+        } else {
+          transactions.unshift({
+            id: `tx-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            type: formType,
+            amount: cleanAmount,
+            category: formCategoryId,
+            date: dateVal,
+            note: noteVal
+          });
+          showToast("Операцію додано");
+        }
+
+        // Switch view month to the transaction's month so user immediately sees it
+        const [yStr, mStr] = dateVal.split("-");
+        if (yStr && mStr) {
+          selectedYear = parseInt(yStr, 10);
+          selectedMonth = parseInt(mStr, 10) - 1;
+        }
+
+        saveTransactions();
+        renderAll();
+        closeTransactionModal();
+      });
+
+      /* ======================================================================
+         EDIT & DELETE HANDLERS ON TRANSACTION LIST
+         ====================================================================== */
+      transactionsList.addEventListener("click", async (e) => {
+        const deleteBtn = e.target.closest("[data-delete-id]");
+        if (deleteBtn) {
+          e.stopPropagation();
+          const id = deleteBtn.dataset.deleteId;
+          const confirmed = await customConfirm(
+            "Видалити запис?",
+            "Цю операцію буде остаточно видалено зі списку."
+          );
+          if (confirmed) {
+            transactions = transactions.filter((tx) => tx.id !== id);
+            saveTransactions();
+            renderAll();
+            showToast("Запис видалено");
+          }
+          return;
+        }
+
+        const item = e.target.closest("[data-edit-id]");
+        if (item) {
+          const id = item.dataset.editId;
+          const found = transactions.find((tx) => tx.id === id);
+          if (found) openTransactionModal(found);
+        }
+      });
+
+      /* ======================================================================
+         DATA TAB: THEME, EXPORT JSON/CSV, IMPORT JSON, CLEAR ALL
+         ====================================================================== */
+      document.querySelectorAll(".theme-opt").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          applyTheme(btn.dataset.setTheme);
+        });
+      });
+
+      function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      document.getElementById("exportJsonBtn").addEventListener("click", () => {
+        const payload = JSON.stringify(transactions, null, 2);
+        const blob = new Blob([payload], { type: "application/json;charset=utf-8" });
+        triggerDownload(blob, `finance-backup-${getTodayISO()}.json`);
+        showToast("Резервну копію JSON збережено");
+      });
+
+      document.getElementById("importJsonInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (!Array.isArray(imported)) throw new Error("Invalid format");
+
+            const validItems = imported.filter(
+              (item) =>
+                item &&
+                (item.type === "income" || item.type === "expense") &&
+                typeof item.amount === "number" &&
+                item.amount > 0 &&
+                typeof item.date === "string"
+            );
+
+            transactions = validItems;
+            saveTransactions();
+            renderAll();
+            showToast(`Імпортовано записів: ${validItems.length}`);
+          } catch (err) {
+            showToast("Невірний формат файлу JSON");
+          }
+          e.target.value = "";
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById("exportCsvBtn").addEventListener("click", () => {
+        const header = ["Дата", "Тип", "Категорія", "Сума (UAH)", "Примітка"];
+        const rows = [...transactions]
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .map((tx) => {
+            const cat = getCategoryMeta(tx.type, tx.category);
+            const typeUa = tx.type === "income" ? "Дохід" : "Витрата";
+            const signedAmount = tx.type === "income" ? tx.amount : -tx.amount;
+            const safeNote = `"${String(tx.note || "").replace(/"/g, '""')}"`;
+            return [tx.date, typeUa, cat.name, signedAmount, safeNote].join(";");
+          });
+
+        // Add UTF-8 BOM so Excel opens Cyrillic characters cleanly
+        const csvContent = "\uFEFF" + [header.join(";"), ...rows].join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        triggerDownload(blob, `finance-report-${getTodayISO()}.csv`);
+        showToast("CSV таблицю завантажено");
+      });
+
+      document.getElementById("clearAllBtn").addEventListener("click", async () => {
+        const confirmed = await customConfirm(
+          "Очистити всі дані?",
+          "Усі транзакції будуть видалені без можливості відновлення (якщо немає JSON-копії).",
+          "Очистити все"
+        );
+        if (confirmed) {
+          transactions = [];
+          saveTransactions();
+          renderAll();
+          showToast("Усі дані очищено");
+        }
+      });
+
+      /* ======================================================================
+         MARKET DATA, SMART ADVISOR & NEWS FEED MODULE
+         ====================================================================== */
+      const MARKET_CACHE_KEY = "neo_finance_market_cache_v1";
+
+      const FALLBACK_QUOTES = [
+        { symbol: "USD", label: "Долар НБУ", priceText: "41.45 ₴", subText: "Офіційний курс", change24h: 0.24, rawUah: 41.45 },
+        { symbol: "EUR", label: "Євро НБУ", priceText: "44.80 ₴", subText: "Офіційний курс", change24h: -0.35, rawUah: 44.80 },
+        { symbol: "BTC", label: "Bitcoin", priceText: "$91,400", subText: "≈ 3 788 530 ₴", change24h: -3.15, rawUah: 3788530 },
+        { symbol: "ETH", label: "Ethereum", priceText: "$3,120", subText: "≈ 129 324 ₴", change24h: -4.10, rawUah: 129324 },
+        { symbol: "SOL", label: "Solana", priceText: "$214.50", subText: "≈ 8 891 ₴", change24h: 5.40, rawUah: 8891 },
+        { symbol: "TON", label: "Toncoin", priceText: "$5.45", subText: "≈ 225.9 ₴", change24h: -1.80, rawUah: 225.9 }
+      ];
+
+      const FALLBACK_NEWS = [
+        {
+          title: "Bitcoin коригується після локального максимуму: інституційний попит утримує ключову підтримку",
+          source: "Ринковий огляд",
+          url: "https://www.coingecko.com/",
+          sentiment: "bear",
+          sentimentLabel: "Просадка / Корекція"
+        },
+        {
+          title: "НБУ зберігає керовану гнучкість курсу гривні: попит на валюту збалансований інтервенціями",
+          source: "Макро / НБУ",
+          url: "https://bank.gov.ua/",
+          sentiment: "macro",
+          sentimentLabel: "Макро / Валюта"
+        },
+        {
+          title: "Ethereum та L2-мережі фіксують зростання ончейн-активності на тлі зниження комісій",
+          source: "Криптоаналітика",
+          url: "https://www.coingecko.com/en/coins/ethereum",
+          sentiment: "bull",
+          sentimentLabel: "Ріст / Бичачий"
+        },
+        {
+          title: "Індекс страху та жадібності перейшов у нейтральну зону — аналітики радять дробити входи",
+          source: "Інвест-сигнали",
+          url: "https://www.coingecko.com/",
+          sentiment: "macro",
+          sentimentLabel: "Стратегія DCA"
+        }
+      ];
+
+      let marketState = {
+        quotes: [...FALLBACK_QUOTES],
+        news: [...FALLBACK_NEWS],
+        isLive: false,
+        updatedAt: null,
+        hasLoadedOnce: false
+      };
+
+      let calcMode = "purchase";
+
+      function formatNbuDateParam(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}${m}${d}`;
+      }
+
+      function classifyNewsSentiment(title) {
+        const lower = String(title || "").toLowerCase();
+        const bullWords = ["surge", "rally", "soar", "bull", "gain", "high", "rise", "jump", "growth", "approve", "adoption", "ріст", "зроста"];
+        const bearWords = ["crash", "drop", "plunge", "fall", "bear", "hack", "lawsuit", "sell-off", "slump", "dip", "decline", "обвал", "падіння", "просад"];
+
+        if (bullWords.some((w) => lower.includes(w))) {
+          return { sentiment: "bull", sentimentLabel: "Ріст / Бичачий" };
+        }
+        if (bearWords.some((w) => lower.includes(w))) {
+          return { sentiment: "bear", sentimentLabel: "Просадка / Ведмежий" };
+        }
+        return { sentiment: "macro", sentimentLabel: "Макро / Валюта" };
+      }
+
+      function renderMarketQuotes() {
+        const grid = document.getElementById("marketQuotesGrid");
+        const statusDot = document.getElementById("marketStatusDot");
+        const statusText = document.getElementById("marketStatusText");
+
+        if (marketState.isLive && marketState.updatedAt) {
+          statusDot.classList.remove("fallback");
+          statusText.innerHTML = `<span class="status-dot"></span><span>Наживо • оновлено о ${marketState.updatedAt}</span>`;
+        } else {
+          statusDot.classList.add("fallback");
+          const label = marketState.updatedAt
+            ? `Кешовані дані (${marketState.updatedAt})`
+            : "Демо-режим (офлайн / ліміт API)";
+          statusText.innerHTML = `<span class="status-dot fallback"></span><span>${label}</span>`;
+        }
+
+        grid.innerHTML = marketState.quotes
+          .map((q) => {
+            const chg = Number(q.change24h) || 0;
+            const cls = chg > 0.05 ? "up" : chg < -0.05 ? "down" : "flat";
+            const sign = chg > 0 ? "+" : "";
+            return `
+              <div class="quote-card">
+                <div class="quote-top">
+                  <div class="quote-symbol">
+                    <span>${escapeHTML(q.symbol)}</span>
+                    <span class="quote-subtag">${escapeHTML(q.label)}</span>
+                  </div>
+                  <span class="change-pill tabular ${cls}">${sign}${chg.toFixed(2)}%</span>
+                </div>
+                <div class="quote-price tabular">${escapeHTML(q.priceText)}</div>
+                <div class="quote-secondary tabular">${escapeHTML(q.subText)}</div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMarketNews() {
+        const list = document.getElementById("marketNewsList");
+        document.getElementById("newsCountLabel").textContent = `${marketState.news.length} новин`;
+
+        list.innerHTML = marketState.news
+          .map(
+            (item) => `
+            <a class="news-item" href="${escapeHTML(item.url)}" target="_blank" rel="noopener noreferrer">
+              <div class="news-meta">
+                <span class="sentiment-tag ${item.sentiment}">${escapeHTML(item.sentimentLabel)}</span>
+                <span class="news-source">${escapeHTML(item.source)}</span>
+              </div>
+              <div class="news-title">${escapeHTML(item.title)}</div>
+            </a>
+          `
+          )
+          .join("");
+      }
+
+      function computeUserFinancialMetrics() {
+        const totalBalance = transactions.reduce(
+          (sum, tx) => sum + (tx.type === "income" ? tx.amount : -tx.amount),
+          0
+        );
+
+        const monthTxs = getMonthTransactions();
+        let monthIncome = 0;
+        let monthExpense = 0;
+        monthTxs.forEach((tx) => {
+          if (tx.type === "income") monthIncome += tx.amount;
+          else monthExpense += tx.amount;
+        });
+
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        const now = new Date();
+        const isCurrentMonth =
+          now.getFullYear() === selectedYear && now.getMonth() === selectedMonth;
+
+        let elapsedDays = daysInMonth;
+        if (isCurrentMonth) {
+          elapsedDays = Math.max(1, now.getDate());
+        } else if (
+          selectedYear > now.getFullYear() ||
+          (selectedYear === now.getFullYear() && selectedMonth > now.getMonth())
+        ) {
+          elapsedDays = 1;
+        }
+
+        const remainingDays = isCurrentMonth ? Math.max(1, daysInMonth - now.getDate() + 1) : daysInMonth;
+        const avgDailyBurn = monthExpense / elapsedDays;
+        const projectedMonthExpense = avgDailyBurn * daysInMonth;
+        const projectedMonthSurplus = monthIncome - projectedMonthExpense;
+        const currentMonthNet = monthIncome - monthExpense;
+
+        const availablePool = Math.max(0, Math.min(totalBalance, currentMonthNet > 0 ? currentMonthNet : totalBalance));
+        const safeDailyBudget = availablePool / remainingDays;
+
+        const expectedSpendRatio = elapsedDays / daysInMonth;
+        const actualSpendRatio = monthIncome > 0 ? monthExpense / monthIncome : (monthExpense > 0 ? 1.5 : 0);
+
+        return {
+          totalBalance,
+          monthIncome,
+          monthExpense,
+          currentMonthNet,
+          daysInMonth,
+          elapsedDays,
+          remainingDays,
+          avgDailyBurn,
+          projectedMonthExpense,
+          projectedMonthSurplus,
+          safeDailyBudget,
+          expectedSpendRatio,
+          actualSpendRatio
+        };
+      }
+
+      function renderAdvisor() {
+        const container = document.getElementById("advisorSignalsList");
+        if (!container) return;
+
+        const m = computeUserFinancialMetrics();
+        const signals = [];
+
+        if (m.monthIncome === 0 && m.monthExpense === 0) {
+          signals.push({
+            tone: "neutral",
+            badge: "Недостатньо даних",
+            title: "Додай доходи та витрати за місяць",
+            body: "Щоб радник точно розрахував безпечний денний ліміт і вільний резерв для покупок або інвестицій, зафіксуй операції за поточний місяць.",
+            metrics: [`Баланс: ${formatUAH(m.totalBalance)}`, `Днів у періоді: ${m.remainingDays}`]
+          });
+        } else if (m.projectedMonthSurplus < 0 || m.totalBalance <= 0) {
+          const deficit = Math.abs(Math.round(m.projectedMonthSurplus));
+          signals.push({
+            tone: "danger",
+            badge: "Перевитрата темпу",
+            title: "Темп витрат перевищує місячні доходи",
+            body: `При середніх витратах ${formatUAH(m.avgDailyBurn)}/день прогнозований дефіцит до кінця місяця складе близько ${formatUAH(deficit)}. Варто поставити на паузу необов'язкові покупки та високоризикові активи.`,
+            metrics: [
+              `Витрати/день: ${formatUAH(m.avgDailyBurn)}`,
+              `Безпечний ліміт: ${formatUAH(m.safeDailyBudget)}/день`
+            ]
+          });
+        } else if (m.actualSpendRatio > m.expectedSpendRatio * 1.15) {
+          signals.push({
+            tone: "warn",
+            badge: "Прискорений темп",
+            title: "Витрати йдуть швидше за графік місяця",
+            body: `Використано ${Math.round(m.actualSpendRatio * 100)}% місячного доходу за ${m.elapsedDays} з ${m.daysInMonth} днів. Щоб зберегти прогнозований профіцит ${formatUAH(m.projectedMonthSurplus)}, тримай витрати в межах денної норми.`,
+            metrics: [
+              `Норма: ${formatUAH(m.safeDailyBudget)}/день`,
+              `Залишок днів: ${m.remainingDays}`
+            ]
+          });
+        } else {
+          signals.push({
+            tone: "good",
+            badge: "Бюджет у нормі",
+            title: "Стабільний запас ліквідності",
+            body: `Твої витрати (${formatUAH(m.avgDailyBurn)}/день) комфортно вкладаються в дохід. Прогнозований чистий залишок на кінець місяця — близько ${formatUAH(m.projectedMonthSurplus)}.`,
+            metrics: [
+              `Доступно: ${formatUAH(m.safeDailyBudget)}/день`,
+              `Прогноз профіциту: +${formatUAH(m.projectedMonthSurplus)}`
+            ]
+          });
+        }
+
+        const dippedAssets = marketState.quotes.filter((q) => q.change24h <= -2.5);
+        const overheatedAssets = marketState.quotes.filter((q) => q.change24h >= 6.5);
+        const canInvest = m.totalBalance > 1000 && m.projectedMonthSurplus > 500;
+        const safeAllocUah = Math.max(0, Math.round(Math.min(m.totalBalance * 0.2, m.projectedMonthSurplus * 0.25)));
+
+        if (dippedAssets.length > 0 && canInvest) {
+          const topDip = [...dippedAssets].sort((a, b) => a.change24h - b.change24h)[0];
+          signals.push({
+            tone: "good",
+            badge: "Точка входу",
+            title: `${topDip.symbol} на просадці (${topDip.change24h.toFixed(2)}% за 24 год)`,
+            body: `Оскільки твій бюджет у плюсі, корекція ${topDip.label} (${topDip.priceText}) дає можливість докупити актив дешевше без шкоди для обов'язкових витрат.`,
+            metrics: [
+              `Безпечний ліміт входу: до ${formatUAH(safeAllocUah)}`,
+              `20% від вільного резерву`
+            ]
+          });
+        } else if (overheatedAssets.length > 0) {
+          const topHot = [...overheatedAssets].sort((a, b) => b.change24h - a.change24h)[0];
+          signals.push({
+            tone: "warn",
+            badge: "Ризик перегріву",
+            title: `Не купуй ${topHot.symbol} на локальному піку (+${topHot.change24h.toFixed(2)}%)`,
+            body: `${topHot.label} різко виріс за останню добу. Вхід після імпульсного росту підвищує ризик потрапити на відкат — краще дочекатись корекції або зафіксувати частину прибутку.`,
+            metrics: [`Поточна ціна: ${topHot.priceText}`, `Зміна 24г: +${topHot.change24h.toFixed(2)}%`]
+          });
+        } else {
+          const usdQuote = marketState.quotes.find((q) => q.symbol === "USD");
+          if (usdQuote && canInvest) {
+            signals.push({
+              tone: "neutral",
+              badge: "Валютний буфер",
+              title: "Диверсифікація вільного залишку",
+              body: `Ринок без різких аномалій. При поточному курсі ${usdQuote.priceText} ти можеш безпечно перевести частину вільного профіциту у валютний резерв або стейблкоїни.`,
+              metrics: [
+                `Рекомендовано: до ${formatUAH(safeAllocUah)}`,
+                `Еквівалент: ≈ $${(safeAllocUah / (usdQuote.rawUah || 41.5)).toFixed(0)}`
+              ]
+            });
+          }
+        }
+
+        container.innerHTML = signals
+          .map(
+            (s) => `
+            <div class="advisor-card ${s.tone}">
+              <div class="advisor-head">
+                <div class="advisor-title">${escapeHTML(s.title)}</div>
+                <span class="advisor-badge">${escapeHTML(s.badge)}</span>
+              </div>
+              <div class="advisor-body">${escapeHTML(s.body)}</div>
+              <div class="advisor-metrics">
+                ${s.metrics.map((mItem) => `<span class="metric-chip tabular">${escapeHTML(mItem)}</span>`).join("")}
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      document.querySelectorAll(".calc-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          calcMode = btn.dataset.calcMode;
+          document.querySelectorAll(".calc-mode-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.calcMode === calcMode);
+          });
+
+          const assetWrap = document.getElementById("calcAssetWrap");
+          const nameInput = document.getElementById("calcNameInput");
+          if (calcMode === "invest") {
+            assetWrap.style.display = "block";
+            nameInput.placeholder = "Мета (напр. резерв)";
+          } else {
+            assetWrap.style.display = "none";
+            nameInput.placeholder = "Що плануєш купити?";
+          }
+          document.getElementById("calcResultBox").classList.remove("visible");
+        });
+      });
+
+      const calcAmountInput = document.getElementById("calcAmountInput");
+      calcAmountInput.addEventListener("input", () => {
+        calcAmountInput.value = calcAmountInput.value
+          .replace(",", ".")
+          .replace(/[^0-9.]/g, "");
+      });
+
+      document.getElementById("runFeasibilityBtn").addEventListener("click", () => {
+        const amount = parseFloat(calcAmountInput.value);
+        if (isNaN(amount) || amount <= 0) {
+          showToast("Введи суму у гривнях для розрахунку");
+          calcAmountInput.focus();
+          return;
+        }
+
+        const m = computeUserFinancialMetrics();
+        const itemName = document.getElementById("calcNameInput").value.trim();
+        const assetSymbol = document.getElementById("calcAssetSelect").value;
+        const selectedQuote = marketState.quotes.find((q) => q.symbol === assetSymbol);
+
+        const resultBox = document.getElementById("calcResultBox");
+        const verdictTitle = document.getElementById("calcVerdictTitle");
+        const verdictBadge = document.getElementById("calcVerdictBadge");
+        const verdictDetails = document.getElementById("calcVerdictDetails");
+
+        const balanceAfter = m.totalBalance - amount;
+        const pctOfBalance = m.totalBalance > 0 ? (amount / m.totalBalance) * 100 : 100;
+        const newDailySafe = Math.max(0, balanceAfter) / m.remainingDays;
+
+        const targetLabel =
+          calcMode === "invest"
+            ? `${assetSymbol}${itemName ? ` (${itemName})` : ""}`
+            : itemName || "Ця покупка";
+
+        let status = "ok";
+        let badgeText = "Доцільно";
+        let explanation = "";
+
+        if (amount > m.totalBalance) {
+          status = "no";
+          badgeText = "Не вистачає коштів";
+          explanation = `${targetLabel} коштує на ${formatUAH(amount - m.totalBalance)} більше, ніж твій поточний загальний баланс (${formatUAH(m.totalBalance)}). Купівля призведе до касового розриву.`;
+        } else if (m.projectedMonthSurplus < 0 && calcMode === "purchase") {
+          status = "no";
+          badgeText = "Не варто зараз";
+          explanation = `Твій місячний бюджет уже йде в мінус (прогноз ${formatUAH(m.projectedMonthSurplus)}). Витрата ${formatUAH(amount)} знизить денний ліміт до ${formatUAH(newDailySafe)}/день при поточних витратах ${formatUAH(m.avgDailyBurn)}/день.`;
+        } else if (
+          calcMode === "invest" &&
+          selectedQuote &&
+          selectedQuote.change24h >= 6.5
+        ) {
+          status = "caution";
+          badgeText = "Перегрітий актив";
+          explanation = `Бюджет дозволяє виділити ${formatUAH(amount)} (${pctOfBalance.toFixed(1)}% балансу), але ${assetSymbol} виріс на +${selectedQuote.change24h.toFixed(2)}% за добу. Краще зайти частинами (напр. ${formatUAH(amount / 2)} зараз і решту на відкаті).`;
+        } else if (pctOfBalance > 35 || (m.monthIncome > 0 && amount > m.projectedMonthSurplus && m.projectedMonthSurplus > 0)) {
+          status = "caution";
+          badgeText = "Стисне бюджет";
+          explanation = `${targetLabel} забере ${pctOfBalance.toFixed(1)}% від усього балансу. Після списання залишиться ${formatUAH(balanceAfter)}, а безпечний ліміт на решту ${m.remainingDays} дн. впаде з ${formatUAH(m.safeDailyBudget)} до ${formatUAH(newDailySafe)}/день.`;
+        } else {
+          status = "ok";
+          badgeText = calcMode === "invest" ? "Комфортний вхід" : "В межах бюджету";
+          const marketNote =
+            calcMode === "invest" && selectedQuote
+              ? ` Поточний курс ${assetSymbol}: ${selectedQuote.priceText} (${selectedQuote.change24h >= 0 ? "+" : ""}${selectedQuote.change24h.toFixed(2)}% за 24г).`
+              : "";
+          explanation = `${targetLabel} на суму ${formatUAH(amount)} складає лише ${pctOfBalance.toFixed(1)}% твого балансу. Після операції залишиться ${formatUAH(balanceAfter)} (${formatUAH(newDailySafe)}/день до кінця місяця).${marketNote}`;
+        }
+
+        verdictTitle.textContent = targetLabel;
+        verdictBadge.className = `verdict-badge ${status}`;
+        verdictBadge.textContent = badgeText;
+        verdictDetails.textContent = explanation;
+        resultBox.classList.add("visible");
+      });
+
+      async function refreshMarketData(manual = false) {
+        const btn = document.getElementById("refreshMarketBtn");
+        if (btn) btn.disabled = true;
+
+        try {
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+
+          const todayStr = formatNbuDateParam(today);
+          const yesterdayStr = formatNbuDateParam(yesterday);
+
+          const [nbuTodayRes, nbuYestRes, cgRes, newsRes] = await Promise.allSettled([
+            fetch(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${todayStr}&json`),
+            fetch(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${yesterdayStr}&json`),
+            fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,the-open-network&vs_currencies=usd,uah&include_24hr_change=true"),
+            fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
+          ]);
+
+          let fetchedAnyLive = false;
+          const updatedQuotes = [...marketState.quotes];
+
+          if (nbuTodayRes.status === "fulfilled" && nbuTodayRes.value.ok) {
+            const todayData = await nbuTodayRes.value.json();
+            let yestData = [];
+            if (nbuYestRes.status === "fulfilled" && nbuYestRes.value.ok) {
+              yestData = await nbuYestRes.value.json();
+            }
+
+            ["USD", "EUR"].forEach((cc) => {
+              const tItem = Array.isArray(todayData) ? todayData.find((x) => x.cc === cc) : null;
+              const yItem = Array.isArray(yestData) ? yestData.find((x) => x.cc === cc) : null;
+              if (tItem && typeof tItem.rate === "number") {
+                const rateNow = tItem.rate;
+                const ratePrev = yItem && typeof yItem.rate === "number" ? yItem.rate : rateNow;
+                const pctDiff = ratePrev > 0 ? ((rateNow - ratePrev) / ratePrev) * 100 : 0;
+                const uahDiff = rateNow - ratePrev;
+                const diffSign = uahDiff >= 0 ? "+" : "";
+
+                const idx = updatedQuotes.findIndex((q) => q.symbol === cc);
+                if (idx !== -1) {
+                  updatedQuotes[idx] = {
+                    symbol: cc,
+                    label: cc === "USD" ? "Долар НБУ" : "Євро НБУ",
+                    priceText: `${rateNow.toFixed(2)} ₴`,
+                    subText: `За добу: ${diffSign}${uahDiff.toFixed(2)} ₴`,
+                    change24h: pctDiff,
+                    rawUah: rateNow
+                  };
+                  fetchedAnyLive = true;
+                }
+              }
+            });
+          }
+
+          if (cgRes.status === "fulfilled" && cgRes.value.ok) {
+            const cgData = await cgRes.value.json();
+            const map = [
+              { id: "bitcoin", symbol: "BTC", label: "Bitcoin" },
+              { id: "ethereum", symbol: "ETH", label: "Ethereum" },
+              { id: "solana", symbol: "SOL", label: "Solana" },
+              { id: "the-open-network", symbol: "TON", label: "Toncoin" }
+            ];
+
+            map.forEach((coin) => {
+              const entry = cgData && cgData[coin.id];
+              if (entry && typeof entry.usd === "number") {
+                const usdFmt =
+                  entry.usd >= 1000
+                    ? `$${Math.round(entry.usd).toLocaleString("en-US")}`
+                    : `$${entry.usd.toFixed(2)}`;
+                const uahVal = typeof entry.uah === "number" ? entry.uah : entry.usd * 41.5;
+                const idx = updatedQuotes.findIndex((q) => q.symbol === coin.symbol);
+                if (idx !== -1) {
+                  updatedQuotes[idx] = {
+                    symbol: coin.symbol,
+                    label: coin.label,
+                    priceText: usdFmt,
+                    subText: `≈ ${formatUAH(Math.round(uahVal))}`,
+                    change24h: typeof entry.usd_24h_change === "number" ? entry.usd_24h_change : 0,
+                    rawUah: uahVal
+                  };
+                  fetchedAnyLive = true;
+                }
+              }
+            });
+          }
+
+          if (newsRes.status === "fulfilled" && newsRes.value.ok) {
+            const newsJson = await newsRes.value.json();
+            if (newsJson && Array.isArray(newsJson.Data) && newsJson.Data.length > 0) {
+              marketState.news = newsJson.Data.slice(0, 8).map((art) => {
+                const tag = classifyNewsSentiment(art.title);
+                return {
+                  title: art.title,
+                  source: art.source_info && art.source_info.name ? art.source_info.name : art.source || "Market News",
+                  url: art.url || "https://www.coingecko.com/",
+                  sentiment: tag.sentiment,
+                  sentimentLabel: tag.sentimentLabel
+                };
+              });
+              fetchedAnyLive = true;
+            }
+          }
+
+          if (fetchedAnyLive) {
+            const nowTime = new Date().toLocaleTimeString("uk-UA", {
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+            marketState.quotes = updatedQuotes;
+            marketState.isLive = true;
+            marketState.updatedAt = nowTime;
+            try {
+              localStorage.setItem(
+                MARKET_CACHE_KEY,
+                JSON.stringify({
+                  quotes: marketState.quotes,
+                  news: marketState.news,
+                  updatedAt: nowTime
+                })
+              );
+            } catch (e) {}
+            if (manual) showToast("Ринкові дані оновлено");
+          } else {
+            marketState.isLive = false;
+            if (manual) showToast("Не вдалося з'єднатися з API — показано збережені дані");
+          }
+        } catch (err) {
+          marketState.isLive = false;
+          if (manual) showToast("Помилка оновлення котирувань");
+        } finally {
+          marketState.hasLoadedOnce = true;
+          if (btn) btn.disabled = false;
+          renderMarketQuotes();
+          renderMarketNews();
+          renderAdvisor();
+        }
+      }
+
+      function initMarketCache() {
+        try {
+          const cached = localStorage.getItem(MARKET_CACHE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed.quotes) && parsed.quotes.length > 0) {
+              marketState.quotes = parsed.quotes;
+            }
+            if (Array.isArray(parsed.news) && parsed.news.length > 0) {
+              marketState.news = parsed.news;
+            }
+            if (parsed.updatedAt) {
+              marketState.updatedAt = parsed.updatedAt;
+            }
+          }
+        } catch (e) {}
+        renderMarketQuotes();
+        renderMarketNews();
+      }
+
+      document.getElementById("refreshMarketBtn").addEventListener("click", () => {
+        refreshMarketData(true);
+      });
+
+      /* ======================================================================
+         BOOTSTRAP APP
+         ====================================================================== */
+      initTheme();
+      loadTransactions();
+      initMarketCache();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
