@@ -131,10 +131,48 @@
       padding: 18px 20px 10px;
     }
 
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .app-title {
       font-size: 18px;
       font-weight: 700;
       letter-spacing: -0.02em;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .live-pill.offline {
+      background: var(--warning-soft);
+      color: var(--warning-color);
+    }
+
+    .live-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulseLive 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
     }
 
     .month-switcher {
@@ -648,6 +686,11 @@
       border-color: var(--accent-blue);
     }
 
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: default;
+    }
+
     .btn-primary {
       background: var(--accent-blue);
       border-color: var(--accent-blue);
@@ -667,6 +710,15 @@
     .btn-danger:hover {
       background: var(--expense-color);
       color: #ffffff;
+    }
+
+    @keyframes spinIcon {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spinning svg {
+      animation: spinIcon 0.8s linear infinite;
     }
 
     /* Theme segmented switch */
@@ -888,7 +940,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .amount-input-wrap:focus-within {
@@ -910,6 +962,19 @@
       font-weight: 700;
       color: var(--text-secondary);
       margin-left: 8px;
+    }
+
+    .live-preview-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      margin-bottom: 14px;
     }
 
     .field-label {
@@ -1096,6 +1161,15 @@
       flex-direction: column;
       justify-content: space-between;
       gap: 6px;
+      transition: border-color 0.25s ease;
+    }
+
+    .quote-card.flash-up {
+      border-color: var(--income-color);
+    }
+
+    .quote-card.flash-down {
+      border-color: var(--expense-color);
     }
 
     .quote-top {
@@ -1434,7 +1508,13 @@
   <div class="app-shell">
     <!-- Top Header with Month Filter -->
     <header class="top-bar">
-      <div class="app-title">Фінанси</div>
+      <div class="title-group">
+        <div class="app-title">Фінанси</div>
+        <span class="live-pill" id="globalLivePill" title="Синхронізація та автооновлення активні">
+          <span class="live-pulse"></span>
+          <span id="globalLiveText">Live</span>
+        </span>
+      </div>
       <div class="month-switcher" aria-label="Вибір місяця">
         <button type="button" class="month-btn" id="prevMonthBtn" title="Попередній місяць">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1541,7 +1621,7 @@
 
       <div class="section-header">
         <h2 class="section-title">Валюти та Крипторинок</h2>
-        <span class="section-count">24 год</span>
+        <span class="section-count" id="marketAutoBadge">Авто • 30с</span>
       </div>
       <div class="quotes-grid" id="marketQuotesGrid"></div>
 
@@ -1553,7 +1633,7 @@
 
       <div class="section-header">
         <h2 class="section-title">Чи варто купувати?</h2>
-        <span class="section-count">Перевірка бюджету</span>
+        <span class="section-count">Живий перерахунок</span>
       </div>
       <div class="calc-card">
         <div class="calc-type-row">
@@ -1614,7 +1694,7 @@
          ====================================================================== -->
     <section id="view-data" class="view-section">
       <div class="section-header">
-        <h2 class="section-title">Оформлення</h2>
+        <h2 class="section-title">Оформлення та синхронізація</h2>
       </div>
       <div class="settings-group">
         <div class="settings-item">
@@ -1625,6 +1705,17 @@
           <div class="theme-switch">
             <button type="button" class="theme-opt active" data-set-theme="dark">Темна</button>
             <button type="button" class="theme-opt" data-set-theme="light">Світла</button>
+          </div>
+        </div>
+
+        <div class="settings-item">
+          <div class="settings-text">
+            <h4>Автооновлення ринку</h4>
+            <p>Оновлення курсів та крипти кожні 30 сек</p>
+          </div>
+          <div class="theme-switch">
+            <button type="button" class="theme-opt active" data-auto-refresh="on">Увімк</button>
+            <button type="button" class="theme-opt" data-auto-refresh="off">Вимк</button>
           </div>
         </div>
       </div>
@@ -1739,6 +1830,12 @@
           <span class="currency-tag">₴</span>
         </div>
 
+        <!-- Live Balance Preview Strip -->
+        <div class="live-preview-strip" id="txLivePreview">
+          <span>Баланс після операції:</span>
+          <strong class="tabular" id="txPreviewBalanceVal">0 ₴</strong>
+        </div>
+
         <!-- Category Chips -->
         <label class="field-label">Категорія</label>
         <div class="category-grid" id="categoryGrid"></div>
@@ -1783,6 +1880,10 @@
          ====================================================================== */
       const STORAGE_KEY = "neo_finance_transactions_v1";
       const THEME_KEY = "neo_finance_theme_v1";
+      const MARKET_CACHE_KEY = "neo_finance_market_cache_v1";
+      const AUTO_REFRESH_KEY = "neo_finance_auto_refresh_v1";
+      const LIVE_POLL_INTERVAL_MS = 30000; // 30 seconds live market polling
+      const STALE_THRESHOLD_MS = 45000; // Refresh on focus if older than 45s
 
       const MONTHS_UK = [
         "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
@@ -1852,12 +1953,20 @@
       };
 
       /* ======================================================================
-         APPLICATION STATE
+         APPLICATION STATE & REAL-TIME SYNC INFRASTRUCTURE
          ====================================================================== */
       let transactions = [];
       let selectedYear = 2026;
       let selectedMonth = 10; // 0-indexed: 10 = Листопад (November)
       let currentTab = "home";
+      let autoRefreshEnabled = true;
+      let liveMarketTimer = null;
+      let isMarketFetching = false;
+
+      // Cross-tab BroadcastChannel (with localStorage fallback)
+      const syncChannel = typeof BroadcastChannel !== "undefined"
+        ? new BroadcastChannel("neo_finance_realtime_sync")
+        : null;
 
       // Form state
       let formType = "expense";
@@ -1886,6 +1995,7 @@
       const modalTitle = document.getElementById("modalTitle");
       const txIdInput = document.getElementById("txIdInput");
       const txAmountInput = document.getElementById("txAmountInput");
+      const txPreviewBalanceVal = document.getElementById("txPreviewBalanceVal");
       const categoryGrid = document.getElementById("categoryGrid");
       const txDateInput = document.getElementById("txDateInput");
       const txNoteInput = document.getElementById("txNoteInput");
@@ -1907,6 +2017,11 @@
           maximumFractionDigits: 2
         });
         return `${formatted} ₴`;
+      }
+
+      function formatSignedUAH(amount) {
+        const prefix = amount < 0 ? "-" : "";
+        return `${prefix}${formatUAH(amount)}`;
       }
 
       function formatDateUA(isoDate) {
@@ -1965,12 +2080,37 @@
         });
       }
 
+      function updateGlobalNetworkIndicator() {
+        const pill = document.getElementById("globalLivePill");
+        const text = document.getElementById("globalLiveText");
+        if (!pill || !text) return;
+
+        if (!navigator.onLine) {
+          pill.classList.add("offline");
+          text.textContent = "Офлайн";
+        } else {
+          pill.classList.remove("offline");
+          text.textContent = "Live";
+        }
+      }
+
+      function broadcastSync(type, payload = {}) {
+        if (syncChannel) {
+          try {
+            syncChannel.postMessage({ type, payload, ts: Date.now() });
+          } catch (e) {}
+        }
+      }
+
       /* ======================================================================
          STORAGE & INITIAL SEED DATA
          ====================================================================== */
-      function saveTransactions() {
+      function saveTransactions(shouldBroadcast = true) {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+          if (shouldBroadcast) {
+            broadcastSync("TRANSACTIONS_UPDATED");
+          }
         } catch (err) {
           showToast("Помилка збереження у пам'ять браузера");
         }
@@ -1980,7 +2120,6 @@
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw === null) {
-            // First launch: seed with realistic sample transactions for November 2026
             transactions = [
               {
                 id: "seed-1",
@@ -2023,7 +2162,7 @@
                 note: "Проїзд та таксі"
               }
             ];
-            saveTransactions();
+            saveTransactions(false);
           } else {
             const parsed = JSON.parse(raw);
             transactions = Array.isArray(parsed) ? parsed : [];
@@ -2033,24 +2172,63 @@
         }
       }
 
-      function applyTheme(theme) {
+      function applyTheme(theme, shouldBroadcast = true) {
         const validTheme = theme === "light" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", validTheme);
         localStorage.setItem(THEME_KEY, validTheme);
 
-        document.querySelectorAll(".theme-opt").forEach((btn) => {
+        document.querySelectorAll("[data-set-theme]").forEach((btn) => {
           btn.classList.toggle("active", btn.dataset.setTheme === validTheme);
         });
+
+        if (shouldBroadcast) {
+          broadcastSync("THEME_UPDATED", { theme: validTheme });
+        }
       }
 
       function initTheme() {
         const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
-        applyTheme(savedTheme);
+        applyTheme(savedTheme, false);
+      }
+
+      function applyAutoRefreshSetting(enabled, shouldBroadcast = true) {
+        autoRefreshEnabled = Boolean(enabled);
+        localStorage.setItem(AUTO_REFRESH_KEY, autoRefreshEnabled ? "on" : "off");
+
+        document.querySelectorAll("[data-auto-refresh]").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.autoRefresh === (autoRefreshEnabled ? "on" : "off"));
+        });
+
+        const badge = document.getElementById("marketAutoBadge");
+        if (badge) {
+          badge.textContent = autoRefreshEnabled ? "Авто • 30с" : "Ручний режим";
+        }
+
+        if (autoRefreshEnabled) {
+          startMarketLivePolling();
+        } else {
+          stopMarketLivePolling();
+        }
+
+        if (shouldBroadcast) {
+          broadcastSync("AUTO_REFRESH_UPDATED", { enabled: autoRefreshEnabled });
+        }
+      }
+
+      function initAutoRefreshSetting() {
+        const saved = localStorage.getItem(AUTO_REFRESH_KEY);
+        applyAutoRefreshSetting(saved !== "off", false);
       }
 
       /* ======================================================================
          FILTERING & RENDERING
          ====================================================================== */
+      function getTotalBalance() {
+        return transactions.reduce((sum, tx) => {
+          return sum + (tx.type === "income" ? tx.amount : -tx.amount);
+        }, 0);
+      }
+
       function getMonthTransactions() {
         const prefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
         return transactions
@@ -2059,7 +2237,6 @@
       }
 
       function renderSparkline(monthTxs) {
-        // Build cumulative trend line across the month's sorted transactions
         const sorted = [...monthTxs].sort((a, b) => a.date.localeCompare(b.date));
         const points = [0];
         let running = 0;
@@ -2110,15 +2287,9 @@
       }
 
       function renderHome(monthTxs) {
-        // Total balance across all recorded transactions
-        const totalBalance = transactions.reduce((sum, tx) => {
-          return sum + (tx.type === "income" ? tx.amount : -tx.amount);
-        }, 0);
+        const totalBalance = getTotalBalance();
+        totalBalanceDisplay.textContent = formatSignedUAH(totalBalance);
 
-        const signPrefix = totalBalance < 0 ? "-" : "";
-        totalBalanceDisplay.textContent = `${signPrefix}${formatUAH(totalBalance)}`;
-
-        // Selected month income & expenses
         let monthIncome = 0;
         let monthExpense = 0;
         monthTxs.forEach((tx) => {
@@ -2131,7 +2302,6 @@
 
         renderSparkline(monthTxs);
 
-        // Transactions list
         txCountLabel.textContent = `${monthTxs.length} ${getPluralRecords(monthTxs.length)}`;
 
         if (monthTxs.length === 0) {
@@ -2255,6 +2425,10 @@
         if (typeof renderAdvisor === "function") {
           renderAdvisor();
         }
+        // Re-evaluate live calculator if currently open with an entered value
+        if (document.getElementById("calcAmountInput")?.value) {
+          evaluateFeasibility(true);
+        }
       }
 
       function getPluralRecords(n) {
@@ -2289,13 +2463,13 @@
             sec.classList.toggle("active", sec.id === `view-${targetTab}`);
           });
 
-          // Show FAB on Home & Analytics; hide on Market & Data tabs
           const showFab = targetTab === "home" || targetTab === "analytics";
           document.getElementById("fabContainer").style.display = showFab ? "flex" : "none";
 
           if (targetTab === "market") {
             renderAdvisor();
-            if (!marketState.hasLoadedOnce) {
+            const isStale = !marketState.lastFetchTs || (Date.now() - marketState.lastFetchTs > STALE_THRESHOLD_MS);
+            if (!marketState.hasLoadedOnce || isStale) {
               refreshMarketData(false);
             }
           }
@@ -2321,8 +2495,35 @@
       });
 
       /* ======================================================================
-         ADD / EDIT TRANSACTION MODAL LOGIC
+         ADD / EDIT TRANSACTION MODAL LOGIC (WITH LIVE BALANCE PREVIEW)
          ====================================================================== */
+      function updateTransactionLivePreview() {
+        const currentTotal = getTotalBalance();
+        const editId = txIdInput.value;
+        let baseBalance = currentTotal;
+
+        if (editId) {
+          const existing = transactions.find((t) => t.id === editId);
+          if (existing) {
+            baseBalance -= existing.type === "income" ? existing.amount : -existing.amount;
+          }
+        }
+
+        const entered = parseFloat(txAmountInput.value);
+        const delta = !isNaN(entered) && entered > 0
+          ? (formType === "income" ? entered : -entered)
+          : 0;
+
+        const projected = baseBalance + delta;
+        txPreviewBalanceVal.textContent = formatSignedUAH(projected);
+        txPreviewBalanceVal.style.color =
+          projected < 0
+            ? "var(--expense-color)"
+            : delta > 0
+            ? "var(--income-color)"
+            : "var(--text-primary)";
+      }
+
       function renderCategoryChips() {
         const cats = CATEGORIES[formType];
         if (!cats.some((c) => c.id === formCategoryId)) {
@@ -2354,6 +2555,7 @@
           }
         });
         renderCategoryChips();
+        updateTransactionLivePreview();
       }
 
       function openTransactionModal(txToEdit = null) {
@@ -2371,7 +2573,6 @@
           formType = "expense";
           formCategoryId = "food";
           txAmountInput.value = "";
-          // Default date inside selected month if viewing another month, otherwise today
           const today = getTodayISO();
           const selectedPrefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
           txDateInput.value = today.startsWith(selectedPrefix) ? today : `${selectedPrefix}-01`;
@@ -2410,11 +2611,11 @@
         renderCategoryChips();
       });
 
-      // Normalize decimal separator (, -> .)
       txAmountInput.addEventListener("input", () => {
         txAmountInput.value = txAmountInput.value
           .replace(",", ".")
           .replace(/[^0-9.]/g, "");
+        updateTransactionLivePreview();
       });
 
       txForm.addEventListener("submit", (e) => {
@@ -2456,14 +2657,13 @@
           showToast("Операцію додано");
         }
 
-        // Switch view month to the transaction's month so user immediately sees it
         const [yStr, mStr] = dateVal.split("-");
         if (yStr && mStr) {
           selectedYear = parseInt(yStr, 10);
           selectedMonth = parseInt(mStr, 10) - 1;
         }
 
-        saveTransactions();
+        saveTransactions(true);
         renderAll();
         closeTransactionModal();
       });
@@ -2482,7 +2682,7 @@
           );
           if (confirmed) {
             transactions = transactions.filter((tx) => tx.id !== id);
-            saveTransactions();
+            saveTransactions(true);
             renderAll();
             showToast("Запис видалено");
           }
@@ -2498,11 +2698,19 @@
       });
 
       /* ======================================================================
-         DATA TAB: THEME, EXPORT JSON/CSV, IMPORT JSON, CLEAR ALL
+         DATA TAB: THEME, AUTO-REFRESH, EXPORT JSON/CSV, IMPORT JSON, CLEAR ALL
          ====================================================================== */
-      document.querySelectorAll(".theme-opt").forEach((btn) => {
+      document.querySelectorAll("[data-set-theme]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          applyTheme(btn.dataset.setTheme);
+          applyTheme(btn.dataset.setTheme, true);
+        });
+      });
+
+      document.querySelectorAll("[data-auto-refresh]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const enabled = btn.dataset.autoRefresh === "on";
+          applyAutoRefreshSetting(enabled, true);
+          showToast(enabled ? "Автооновлення ринку увімкнено" : "Автооновлення ринку вимкнено");
         });
       });
 
@@ -2544,7 +2752,7 @@
             );
 
             transactions = validItems;
-            saveTransactions();
+            saveTransactions(true);
             renderAll();
             showToast(`Імпортовано записів: ${validItems.length}`);
           } catch (err) {
@@ -2567,7 +2775,6 @@
             return [tx.date, typeUa, cat.name, signedAmount, safeNote].join(";");
           });
 
-        // Add UTF-8 BOM so Excel opens Cyrillic characters cleanly
         const csvContent = "\uFEFF" + [header.join(";"), ...rows].join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         triggerDownload(blob, `finance-report-${getTodayISO()}.csv`);
@@ -2582,17 +2789,15 @@
         );
         if (confirmed) {
           transactions = [];
-          saveTransactions();
+          saveTransactions(true);
           renderAll();
           showToast("Усі дані очищено");
         }
       });
 
       /* ======================================================================
-         MARKET DATA, SMART ADVISOR & NEWS FEED MODULE
+         MARKET DATA, SMART ADVISOR & NEWS FEED MODULE (REAL-TIME POLLING)
          ====================================================================== */
-      const MARKET_CACHE_KEY = "neo_finance_market_cache_v1";
-
       const FALLBACK_QUOTES = [
         { symbol: "USD", label: "Долар НБУ", priceText: "41.45 ₴", subText: "Офіційний курс", change24h: 0.24, rawUah: 41.45 },
         { symbol: "EUR", label: "Євро НБУ", priceText: "44.80 ₴", subText: "Офіційний курс", change24h: -0.35, rawUah: 44.80 },
@@ -2638,6 +2843,7 @@
         news: [...FALLBACK_NEWS],
         isLive: false,
         updatedAt: null,
+        lastFetchTs: 0,
         hasLoadedOnce: false
       };
 
@@ -2664,7 +2870,7 @@
         return { sentiment: "macro", sentimentLabel: "Макро / Валюта" };
       }
 
-      function renderMarketQuotes() {
+      function renderMarketQuotes(prevRatesMap = {}) {
         const grid = document.getElementById("marketQuotesGrid");
         const statusDot = document.getElementById("marketStatusDot");
         const statusText = document.getElementById("marketStatusText");
@@ -2685,8 +2891,15 @@
             const chg = Number(q.change24h) || 0;
             const cls = chg > 0.05 ? "up" : chg < -0.05 ? "down" : "flat";
             const sign = chg > 0 ? "+" : "";
+
+            let flashCls = "";
+            const prevRate = prevRatesMap[q.symbol];
+            if (typeof prevRate === "number" && q.rawUah && prevRate !== q.rawUah) {
+              flashCls = q.rawUah > prevRate ? "flash-up" : "flash-down";
+            }
+
             return `
-              <div class="quote-card">
+              <div class="quote-card ${flashCls}" data-quote-symbol="${escapeHTML(q.symbol)}">
                 <div class="quote-top">
                   <div class="quote-symbol">
                     <span>${escapeHTML(q.symbol)}</span>
@@ -2700,6 +2913,14 @@
             `;
           })
           .join("");
+
+        if (Object.keys(prevRatesMap).length > 0) {
+          setTimeout(() => {
+            grid.querySelectorAll(".flash-up, .flash-down").forEach((el) => {
+              el.classList.remove("flash-up", "flash-down");
+            });
+          }, 900);
+        }
       }
 
       function renderMarketNews() {
@@ -2722,10 +2943,7 @@
       }
 
       function computeUserFinancialMetrics() {
-        const totalBalance = transactions.reduce(
-          (sum, tx) => sum + (tx.type === "income" ? tx.amount : -tx.amount),
-          0
-        );
+        const totalBalance = getTotalBalance();
 
         const monthTxs = getMonthTransactions();
         let monthIncome = 0;
@@ -2890,38 +3108,20 @@
           .join("");
       }
 
-      document.querySelectorAll(".calc-mode-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          calcMode = btn.dataset.calcMode;
-          document.querySelectorAll(".calc-mode-btn").forEach((b) => {
-            b.classList.toggle("active", b.dataset.calcMode === calcMode);
-          });
-
-          const assetWrap = document.getElementById("calcAssetWrap");
-          const nameInput = document.getElementById("calcNameInput");
-          if (calcMode === "invest") {
-            assetWrap.style.display = "block";
-            nameInput.placeholder = "Мета (напр. резерв)";
-          } else {
-            assetWrap.style.display = "none";
-            nameInput.placeholder = "Що плануєш купити?";
-          }
-          document.getElementById("calcResultBox").classList.remove("visible");
-        });
-      });
-
-      const calcAmountInput = document.getElementById("calcAmountInput");
-      calcAmountInput.addEventListener("input", () => {
-        calcAmountInput.value = calcAmountInput.value
-          .replace(",", ".")
-          .replace(/[^0-9.]/g, "");
-      });
-
-      document.getElementById("runFeasibilityBtn").addEventListener("click", () => {
+      /* ======================================================================
+         LIVE FEASIBILITY CALCULATOR (UPDATES ON TYPING & MARKET TICKS)
+         ====================================================================== */
+      function evaluateFeasibility(silent = false) {
         const amount = parseFloat(calcAmountInput.value);
+        const resultBox = document.getElementById("calcResultBox");
+
         if (isNaN(amount) || amount <= 0) {
-          showToast("Введи суму у гривнях для розрахунку");
-          calcAmountInput.focus();
+          if (silent) {
+            resultBox.classList.remove("visible");
+          } else {
+            showToast("Введи суму у гривнях для розрахунку");
+            calcAmountInput.focus();
+          }
           return;
         }
 
@@ -2930,7 +3130,6 @@
         const assetSymbol = document.getElementById("calcAssetSelect").value;
         const selectedQuote = marketState.quotes.find((q) => q.symbol === assetSymbol);
 
-        const resultBox = document.getElementById("calcResultBox");
         const verdictTitle = document.getElementById("calcVerdictTitle");
         const verdictBadge = document.getElementById("calcVerdictBadge");
         const verdictDetails = document.getElementById("calcVerdictDetails");
@@ -2971,10 +3170,12 @@
         } else {
           status = "ok";
           badgeText = calcMode === "invest" ? "Комфортний вхід" : "В межах бюджету";
-          const marketNote =
-            calcMode === "invest" && selectedQuote
-              ? ` Поточний курс ${assetSymbol}: ${selectedQuote.priceText} (${selectedQuote.change24h >= 0 ? "+" : ""}${selectedQuote.change24h.toFixed(2)}% за 24г).`
-              : "";
+          let marketNote = "";
+          if (calcMode === "invest" && selectedQuote) {
+            const estUnits = selectedQuote.rawUah > 0 ? amount / selectedQuote.rawUah : 0;
+            const unitFmt = estUnits >= 1 ? estUnits.toFixed(2) : estUnits.toFixed(5);
+            marketNote = ` Орієнтовно отримаєш ≈ ${unitFmt} ${assetSymbol} за курсом ${selectedQuote.priceText} (${selectedQuote.change24h >= 0 ? "+" : ""}${selectedQuote.change24h.toFixed(2)}% за 24г).`;
+          }
           explanation = `${targetLabel} на суму ${formatUAH(amount)} складає лише ${pctOfBalance.toFixed(1)}% твого балансу. Після операції залишиться ${formatUAH(balanceAfter)} (${formatUAH(newDailySafe)}/день до кінця місяця).${marketNote}`;
         }
 
@@ -2983,11 +3184,65 @@
         verdictBadge.textContent = badgeText;
         verdictDetails.textContent = explanation;
         resultBox.classList.add("visible");
+      }
+
+      document.querySelectorAll(".calc-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          calcMode = btn.dataset.calcMode;
+          document.querySelectorAll(".calc-mode-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.calcMode === calcMode);
+          });
+
+          const assetWrap = document.getElementById("calcAssetWrap");
+          const nameInput = document.getElementById("calcNameInput");
+          if (calcMode === "invest") {
+            assetWrap.style.display = "block";
+            nameInput.placeholder = "Мета (напр. резерв)";
+          } else {
+            assetWrap.style.display = "none";
+            nameInput.placeholder = "Що плануєш купити?";
+          }
+          evaluateFeasibility(true);
+        });
       });
 
+      const calcAmountInput = document.getElementById("calcAmountInput");
+      calcAmountInput.addEventListener("input", () => {
+        calcAmountInput.value = calcAmountInput.value
+          .replace(",", ".")
+          .replace(/[^0-9.]/g, "");
+        evaluateFeasibility(true);
+      });
+
+      document.getElementById("calcNameInput").addEventListener("input", () => {
+        if (calcAmountInput.value) evaluateFeasibility(true);
+      });
+
+      document.getElementById("calcAssetSelect").addEventListener("change", () => {
+        if (calcAmountInput.value) evaluateFeasibility(true);
+      });
+
+      document.getElementById("runFeasibilityBtn").addEventListener("click", () => {
+        evaluateFeasibility(false);
+      });
+
+      /* ======================================================================
+         MARKET FETCHING & LIVE TIMER MANAGEMENT
+         ====================================================================== */
       async function refreshMarketData(manual = false) {
+        if (isMarketFetching) return;
+        isMarketFetching = true;
+
         const btn = document.getElementById("refreshMarketBtn");
-        if (btn) btn.disabled = true;
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add("spinning");
+        }
+
+        const prevRatesMap = {};
+        marketState.quotes.forEach((q) => {
+          prevRatesMap[q.symbol] = q.rawUah;
+        });
 
         try {
           const today = new Date();
@@ -3091,22 +3346,27 @@
           }
 
           if (fetchedAnyLive) {
-            const nowTime = new Date().toLocaleTimeString("uk-UA", {
+            const nowTs = Date.now();
+            const nowTime = new Date(nowTs).toLocaleTimeString("uk-UA", {
               hour: "2-digit",
-              minute: "2-digit"
+              minute: "2-digit",
+              second: "2-digit"
             });
             marketState.quotes = updatedQuotes;
             marketState.isLive = true;
             marketState.updatedAt = nowTime;
+            marketState.lastFetchTs = nowTs;
             try {
               localStorage.setItem(
                 MARKET_CACHE_KEY,
                 JSON.stringify({
                   quotes: marketState.quotes,
                   news: marketState.news,
-                  updatedAt: nowTime
+                  updatedAt: nowTime,
+                  lastFetchTs: nowTs
                 })
               );
+              broadcastSync("MARKET_UPDATED");
             } catch (e) {}
             if (manual) showToast("Ринкові дані оновлено");
           } else {
@@ -3117,11 +3377,35 @@
           marketState.isLive = false;
           if (manual) showToast("Помилка оновлення котирувань");
         } finally {
+          isMarketFetching = false;
           marketState.hasLoadedOnce = true;
-          if (btn) btn.disabled = false;
-          renderMarketQuotes();
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove("spinning");
+          }
+          renderMarketQuotes(prevRatesMap);
           renderMarketNews();
           renderAdvisor();
+          if (calcAmountInput.value) evaluateFeasibility(true);
+        }
+      }
+
+      function startMarketLivePolling() {
+        stopMarketLivePolling();
+        if (!autoRefreshEnabled) return;
+
+        liveMarketTimer = setInterval(() => {
+          if (document.hidden || !navigator.onLine) return;
+          if (currentTab === "market") {
+            refreshMarketData(false);
+          }
+        }, LIVE_POLL_INTERVAL_MS);
+      }
+
+      function stopMarketLivePolling() {
+        if (liveMarketTimer) {
+          clearInterval(liveMarketTimer);
+          liveMarketTimer = null;
         }
       }
 
@@ -3139,6 +3423,9 @@
             if (parsed.updatedAt) {
               marketState.updatedAt = parsed.updatedAt;
             }
+            if (parsed.lastFetchTs) {
+              marketState.lastFetchTs = parsed.lastFetchTs;
+            }
           }
         } catch (e) {}
         renderMarketQuotes();
@@ -3150,12 +3437,84 @@
       });
 
       /* ======================================================================
+         REAL-TIME CROSS-TAB & VISIBILITY LISTENERS
+         ====================================================================== */
+      function handleRemoteSync(eventType) {
+        if (eventType === "TRANSACTIONS_UPDATED") {
+          loadTransactions();
+          renderAll();
+          if (txModalBackdrop.classList.contains("open")) {
+            updateTransactionLivePreview();
+          }
+        } else if (eventType === "MARKET_UPDATED") {
+          initMarketCache();
+          renderAdvisor();
+          if (calcAmountInput.value) evaluateFeasibility(true);
+        } else if (eventType === "THEME_UPDATED") {
+          const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+          applyTheme(savedTheme, false);
+        } else if (eventType === "AUTO_REFRESH_UPDATED") {
+          const saved = localStorage.getItem(AUTO_REFRESH_KEY);
+          applyAutoRefreshSetting(saved !== "off", false);
+        }
+      }
+
+      if (syncChannel) {
+        syncChannel.addEventListener("message", (e) => {
+          if (e.data && e.data.type) {
+            handleRemoteSync(e.data.type);
+          }
+        });
+      }
+
+      window.addEventListener("storage", (e) => {
+        if (e.key === STORAGE_KEY) {
+          handleRemoteSync("TRANSACTIONS_UPDATED");
+        } else if (e.key === MARKET_CACHE_KEY) {
+          handleRemoteSync("MARKET_UPDATED");
+        } else if (e.key === THEME_KEY) {
+          handleRemoteSync("THEME_UPDATED");
+        } else if (e.key === AUTO_REFRESH_KEY) {
+          handleRemoteSync("AUTO_REFRESH_UPDATED");
+        }
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          loadTransactions();
+          initMarketCache();
+          renderAll();
+          updateGlobalNetworkIndicator();
+
+          const isStale = !marketState.lastFetchTs || (Date.now() - marketState.lastFetchTs > STALE_THRESHOLD_MS);
+          if (autoRefreshEnabled && currentTab === "market" && isStale) {
+            refreshMarketData(false);
+          }
+        }
+      });
+
+      window.addEventListener("online", () => {
+        updateGlobalNetworkIndicator();
+        if (currentTab === "market" && autoRefreshEnabled) {
+          refreshMarketData(false);
+        }
+      });
+
+      window.addEventListener("offline", () => {
+        updateGlobalNetworkIndicator();
+        marketState.isLive = false;
+        renderMarketQuotes();
+      });
+
+      /* ======================================================================
          BOOTSTRAP APP
          ====================================================================== */
       initTheme();
+      initAutoRefreshSetting();
       loadTransactions();
       initMarketCache();
       renderAll();
+      updateGlobalNetworkIndicator();
     })();
   </script>
 </body>
