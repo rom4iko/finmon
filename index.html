@@ -30,6 +30,9 @@
       --expense-color: #ef4444;
       --expense-soft: rgba(239, 68, 68, 0.14);
 
+      --warning-color: #f59e0b;
+      --warning-soft: rgba(245, 158, 11, 0.14);
+
       --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.25);
       --shadow-fab: 0 8px 24px rgba(37, 99, 235, 0.45);
       --radius-lg: 20px;
@@ -59,6 +62,9 @@
 
       --expense-color: #dc2626;
       --expense-soft: rgba(220, 38, 38, 0.1);
+
+      --warning-color: #d97706;
+      --warning-soft: rgba(217, 119, 6, 0.12);
 
       --shadow-card: 0 4px 16px rgba(15, 23, 42, 0.05);
       --shadow-fab: 0 8px 20px rgba(37, 99, 235, 0.3);
@@ -739,7 +745,7 @@
       background: var(--bg-card);
       border-top: 1px solid var(--border-subtle);
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       z-index: 50;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -1037,6 +1043,386 @@
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
+
+    /* ==========================================================================
+       MARKET & SMART ADVISOR TAB (#view-market)
+       ========================================================================== */
+    .market-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .market-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--income-color);
+      flex-shrink: 0;
+    }
+
+    .status-dot.fallback {
+      background: var(--warning-color);
+    }
+
+    .quotes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .quote-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .quote-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quote-symbol {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .quote-subtag {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .change-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .change-pill.up {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .change-pill.down {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .change-pill.flat {
+      background: var(--bg-card-elevated);
+      color: var(--text-secondary);
+    }
+
+    .quote-price {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .quote-secondary {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Advisor Cards */
+    .advisor-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .advisor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .advisor-card.good {
+      border-left-color: var(--income-color);
+    }
+
+    .advisor-card.warn {
+      border-left-color: var(--warning-color);
+    }
+
+    .advisor-card.danger {
+      border-left-color: var(--expense-color);
+    }
+
+    .advisor-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .advisor-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .advisor-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+      white-space: nowrap;
+    }
+
+    .advisor-card.good .advisor-badge {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .advisor-card.warn .advisor-badge {
+      background: var(--warning-soft);
+      color: var(--warning-color);
+    }
+
+    .advisor-card.danger .advisor-badge {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .advisor-body {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .advisor-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .metric-chip {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    /* Feasibility Calculator */
+    .calc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 20px;
+    }
+
+    .calc-type-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 12px;
+    }
+
+    .calc-mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 6px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .calc-mode-btn.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .calc-inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 125px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .calc-asset-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    .calc-result {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    .calc-result.visible {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .verdict-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .verdict-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .verdict-badge.ok {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .verdict-badge.caution {
+      background: var(--warning-soft);
+      color: var(--warning-color);
+    }
+
+    .verdict-badge.no {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .calc-details {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* News Feed */
+    .news-list {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .news-item {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.15s ease;
+    }
+
+    .news-item:last-child {
+      border-bottom: none;
+    }
+
+    .news-item:hover,
+    .news-item:active {
+      background: var(--bg-card-elevated);
+    }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .sentiment-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .sentiment-tag.bull {
+      background: var(--income-soft);
+      color: var(--income-color);
+    }
+
+    .sentiment-tag.bear {
+      background: var(--expense-soft);
+      color: var(--expense-color);
+    }
+
+    .sentiment-tag.macro {
+      background: var(--accent-blue-soft);
+      color: var(--accent-blue);
+    }
+
+    .news-source {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .news-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
   </style>
 </head>
 <body>
@@ -1138,7 +1524,97 @@
     </section>
 
     <!-- ======================================================================
-         TAB 3: ДАНІ ТА НАЛАШТУВАННЯ (DATA & SETTINGS)
+         TAB 3: РИНОК ТА АНАЛІТИЧНИЙ РАДНИК (MARKET & SMART ADVISOR)
+         ====================================================================== -->
+    <section id="view-market" class="view-section">
+      <!-- Refresh & Status Bar -->
+      <div class="market-toolbar">
+        <div class="market-status" id="marketStatusText">
+          <span class="status-dot" id="marketStatusDot"></span>
+          <span>Завантаження котирувань...</span>
+        </div>
+        <button type="button" class="btn" id="refreshMarketBtn" style="padding: 6px 11px; font-size: 12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>Оновити</span>
+        </button>
+      </div>
+
+      <!-- Live Currency & Crypto Quotes -->
+      <div class="section-header">
+        <h2 class="section-title">Валюти та Крипторинок</h2>
+        <span class="section-count">24 год</span>
+      </div>
+      <div class="quotes-grid" id="marketQuotesGrid"></div>
+
+      <!-- Data-Driven Automatic Signals -->
+      <div class="section-header">
+        <h2 class="section-title">Аналітичний радник</h2>
+        <span class="section-count">На основі твоїх даних</span>
+      </div>
+      <div class="advisor-stack" id="advisorSignalsList"></div>
+
+      <!-- Purchase / Investment Feasibility Calculator -->
+      <div class="section-header">
+        <h2 class="section-title">Чи варто купувати?</h2>
+        <span class="section-count">Перевірка бюджету</span>
+      </div>
+      <div class="calc-card">
+        <div class="calc-type-row">
+          <button type="button" class="calc-mode-btn active" data-calc-mode="purchase">Покупка / Витрата</button>
+          <button type="button" class="calc-mode-btn" data-calc-mode="invest">Валюта / Крипта</button>
+        </div>
+
+        <div id="calcAssetWrap" style="display: none;">
+          <select id="calcAssetSelect" class="calc-asset-select" aria-label="Оберіть актив">
+            <option value="USD">Долар США (USD)</option>
+            <option value="EUR">Євро (EUR)</option>
+            <option value="BTC">Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="SOL">Solana (SOL)</option>
+            <option value="TON">Toncoin (TON)</option>
+          </select>
+        </div>
+
+        <div class="calc-inputs-row">
+          <input
+            type="text"
+            id="calcNameInput"
+            class="text-input"
+            placeholder="Що плануєш купити?"
+            maxlength="40"
+          />
+          <input
+            type="text"
+            inputmode="decimal"
+            id="calcAmountInput"
+            class="text-input tabular"
+            placeholder="Сума, ₴"
+          />
+        </div>
+
+        <button type="button" class="btn btn-primary" id="runFeasibilityBtn" style="width: 100%; justify-content: center; padding: 11px;">
+          Проаналізувати рішення
+        </button>
+
+        <div class="calc-result" id="calcResultBox">
+          <div class="verdict-row">
+            <strong style="font-size: 13px;" id="calcVerdictTitle">Результат аналізу</strong>
+            <span class="verdict-badge ok" id="calcVerdictBadge">Доцільно</span>
+          </div>
+          <div class="calc-details" id="calcVerdictDetails"></div>
+        </div>
+      </div>
+
+      <!-- Financial & Crypto News Feed -->
+      <div class="section-header">
+        <h2 class="section-title">Стрічка новин та сигналів</h2>
+        <span class="section-count" id="newsCountLabel">Ринковий фон</span>
+      </div>
+      <div class="news-list" id="marketNewsList"></div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 4: ДАНІ ТА НАЛАШТУВАННЯ (DATA & SETTINGS)
          ====================================================================== -->
     <section id="view-data" class="view-section">
       <div class="section-header">
@@ -1206,22 +1682,22 @@
     <!-- Floating Action Button (+) -->
     <div class="fab-container" id="fabContainer">
       <button type="button" class="fab-btn" id="openAddModalBtn" aria-label="Додати транзакцію">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
-    </div>
-
-    <!-- Fixed Bottom Navigation Bar (3 Tabs) -->
+    <!-- Fixed Bottom Navigation Bar (4 Tabs) -->
     <nav class="bottom-nav" aria-label="Головна навігація">
       <button type="button" class="nav-item active" data-tab="home">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span>Головна</span>
       </button>
       <button type="button" class="nav-item" data-tab="analytics">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>Аналітика</span>
       </button>
+      <button type="button" class="nav-item" data-tab="market">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Ринок</span>
+      </button>
       <button type="button" class="nav-item" data-tab="data">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         <span>Дані</span>
       </button>
     </nav>
@@ -1776,6 +2252,9 @@
         const monthTxs = getMonthTransactions();
         renderHome(monthTxs);
         renderAnalytics(monthTxs);
+        if (typeof renderAdvisor === "function") {
+          renderAdvisor();
+        }
       }
 
       function getPluralRecords(n) {
@@ -1810,9 +2289,16 @@
             sec.classList.toggle("active", sec.id === `view-${targetTab}`);
           });
 
-          // Show FAB on Home & Analytics, hide on Data tab
-          document.getElementById("fabContainer").style.display =
-            targetTab === "data" ? "none" : "flex";
+          // Show FAB only on Home & Analytics; hide on Market & Data tabs
+          const showFab = targetTab === "home" || targetTab === "analytics";
+          document.getElementById("fabContainer").style.display = showFab ? "flex" : "none";
+
+          if (targetTab === "market") {
+            renderAdvisor();
+            if (!marketState.hasLoadedOnce) {
+              refreshMarketData(false);
+            }
+          }
         });
       });
 
@@ -2103,10 +2589,589 @@
       });
 
       /* ======================================================================
+         MARKET DATA, SMART ADVISOR & NEWS FEED MODULE
+         ====================================================================== */
+      const MARKET_CACHE_KEY = "neo_finance_market_cache_v1";
+
+      const FALLBACK_QUOTES = [
+        { symbol: "USD", label: "Долар НБУ", priceText: "41.45 ₴", subText: "Офіційний курс", change24h: 0.24, rawUah: 41.45 },
+        { symbol: "EUR", label: "Євро НБУ", priceText: "44.80 ₴", subText: "Офіційний курс", change24h: -0.35, rawUah: 44.80 },
+        { symbol: "BTC", label: "Bitcoin", priceText: "$91,400", subText: "≈ 3 788 530 ₴", change24h: -3.15, rawUah: 3788530 },
+        { symbol: "ETH", label: "Ethereum", priceText: "$3,120", subText: "≈ 129 324 ₴", change24h: -4.10, rawUah: 129324 },
+        { symbol: "SOL", label: "Solana", priceText: "$214.50", subText: "≈ 8 891 ₴", change24h: 5.40, rawUah: 8891 },
+        { symbol: "TON", label: "Toncoin", priceText: "$5.45", subText: "≈ 225.9 ₴", change24h: -1.80, rawUah: 225.9 }
+      ];
+
+      const FALLBACK_NEWS = [
+        {
+          title: "Bitcoin коригується після локального максимуму: інституційний попит утримує ключову підтримку",
+          source: "Ринковий огляд",
+          url: "https://www.coingecko.com/",
+          sentiment: "bear",
+          sentimentLabel: "Просадка / Корекція"
+        },
+        {
+          title: "НБУ зберігає керовану гнучкість курсу гривні: попит на валюту збалансований інтервенціями",
+          source: "Макро / НБУ",
+          url: "https://bank.gov.ua/",
+          sentiment: "macro",
+          sentimentLabel: "Макро / Валюта"
+        },
+        {
+          title: "Ethereum та L2-мережі фіксують зростання ончейн-активності на тлі зниження комісій",
+          source: "Криптоаналітика",
+          url: "https://www.coingecko.com/en/coins/ethereum",
+          sentiment: "bull",
+          sentimentLabel: "Ріст / Бичачий"
+        },
+        {
+          title: "Індекс страху та жадібності перейшов у нейтральну зону — аналітики радять дробити входи",
+          source: "Інвест-сигнали",
+          url: "https://www.coingecko.com/",
+          sentiment: "macro",
+          sentimentLabel: "Стратегія DCA"
+        }
+      ];
+
+      let marketState = {
+        quotes: [...FALLBACK_QUOTES],
+        news: [...FALLBACK_NEWS],
+        isLive: false,
+        updatedAt: null,
+        hasLoadedOnce: false
+      };
+
+      let calcMode = "purchase"; // "purchase" | "invest"
+
+      function formatNbuDateParam(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}${m}${d}`;
+      }
+
+      function classifyNewsSentiment(title) {
+        const lower = String(title || "").toLowerCase();
+        const bullWords = ["surge", "rally", "soar", "bull", "gain", "high", "rise", "jump", "growth", "approve", "adoption", "ріст", "зроста"];
+        const bearWords = ["crash", "drop", "plunge", "fall", "bear", "hack", "lawsuit", "sell-off", "slump", "dip", "decline", "обвал", "падіння", "просад"];
+
+        if (bullWords.some((w) => lower.includes(w))) {
+          return { sentiment: "bull", sentimentLabel: "Ріст / Бичачий" };
+        }
+        if (bearWords.some((w) => lower.includes(w))) {
+          return { sentiment: "bear", sentimentLabel: "Просадка / Ведмежий" };
+        }
+        return { sentiment: "macro", sentimentLabel: "Макро / Валюта" };
+      }
+
+      function renderMarketQuotes() {
+        const grid = document.getElementById("marketQuotesGrid");
+        const statusDot = document.getElementById("marketStatusDot");
+        const statusText = document.getElementById("marketStatusText");
+
+        if (marketState.isLive && marketState.updatedAt) {
+          statusDot.classList.remove("fallback");
+          statusText.innerHTML = `<span class="status-dot"></span><span>Наживо • оновлено о ${marketState.updatedAt}</span>`;
+        } else {
+          statusDot.classList.add("fallback");
+          const label = marketState.updatedAt
+            ? `Кешовані дані (${marketState.updatedAt})`
+            : "Демо-режим (офлайн / ліміт API)";
+          statusText.innerHTML = `<span class="status-dot fallback"></span><span>${label}</span>`;
+        }
+
+        grid.innerHTML = marketState.quotes
+          .map((q) => {
+            const chg = Number(q.change24h) || 0;
+            const cls = chg > 0.05 ? "up" : chg < -0.05 ? "down" : "flat";
+            const sign = chg > 0 ? "+" : "";
+            return `
+              <div class="quote-card">
+                <div class="quote-top">
+                  <div class="quote-symbol">
+                    <span>${escapeHTML(q.symbol)}</span>
+                    <span class="quote-subtag">${escapeHTML(q.label)}</span>
+                  </div>
+                  <span class="change-pill tabular ${cls}">${sign}${chg.toFixed(2)}%</span>
+                </div>
+                <div class="quote-price tabular">${escapeHTML(q.priceText)}</div>
+                <div class="quote-secondary tabular">${escapeHTML(q.subText)}</div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMarketNews() {
+        const list = document.getElementById("marketNewsList");
+        document.getElementById("newsCountLabel").textContent = `${marketState.news.length} новин`;
+
+        list.innerHTML = marketState.news
+          .map(
+            (item) => `
+            <a class="news-item" href="${escapeHTML(item.url)}" target="_blank" rel="noopener noreferrer">
+              <div class="news-meta">
+                <span class="sentiment-tag ${item.sentiment}">${escapeHTML(item.sentimentLabel)}</span>
+                <span class="news-source">${escapeHTML(item.source)}</span>
+              </div>
+              <div class="news-title">${escapeHTML(item.title)}</div>
+            </a>
+          `
+          )
+          .join("");
+      }
+
+      /* ======================================================================
+         DATA-DRIVEN FINANCIAL & MARKET ANALYTICS ENGINE
+         ====================================================================== */
+      function computeUserFinancialMetrics() {
+        const totalBalance = transactions.reduce(
+          (sum, tx) => sum + (tx.type === "income" ? tx.amount : -tx.amount),
+          0
+        );
+
+        const monthTxs = getMonthTransactions();
+        let monthIncome = 0;
+        let monthExpense = 0;
+        monthTxs.forEach((tx) => {
+          if (tx.type === "income") monthIncome += tx.amount;
+          else monthExpense += tx.amount;
+        });
+
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        const now = new Date();
+        const isCurrentMonth =
+          now.getFullYear() === selectedYear && now.getMonth() === selectedMonth;
+
+        // Determine elapsed days in the selected month
+        let elapsedDays = daysInMonth;
+        if (isCurrentMonth) {
+          elapsedDays = Math.max(1, now.getDate());
+        } else if (
+          selectedYear > now.getFullYear() ||
+          (selectedYear === now.getFullYear() && selectedMonth > now.getMonth())
+        ) {
+          elapsedDays = 1;
+        }
+
+        const remainingDays = isCurrentMonth ? Math.max(1, daysInMonth - now.getDate() + 1) : daysInMonth;
+        const avgDailyBurn = monthExpense / elapsedDays;
+        const projectedMonthExpense = avgDailyBurn * daysInMonth;
+        const projectedMonthSurplus = monthIncome - projectedMonthExpense;
+        const currentMonthNet = monthIncome - monthExpense;
+
+        // Safe daily allowance based on positive balance or remaining monthly cashflow
+        const availablePool = Math.max(0, Math.min(totalBalance, currentMonthNet > 0 ? currentMonthNet : totalBalance));
+        const safeDailyBudget = availablePool / remainingDays;
+
+        // Ideal linear spending percentage vs actual
+        const expectedSpendRatio = elapsedDays / daysInMonth;
+        const actualSpendRatio = monthIncome > 0 ? monthExpense / monthIncome : (monthExpense > 0 ? 1.5 : 0);
+
+        return {
+          totalBalance,
+          monthIncome,
+          monthExpense,
+          currentMonthNet,
+          daysInMonth,
+          elapsedDays,
+          remainingDays,
+          avgDailyBurn,
+          projectedMonthExpense,
+          projectedMonthSurplus,
+          safeDailyBudget,
+          expectedSpendRatio,
+          actualSpendRatio
+        };
+      }
+
+      function renderAdvisor() {
+        const container = document.getElementById("advisorSignalsList");
+        if (!container) return;
+
+        const m = computeUserFinancialMetrics();
+        const signals = [];
+
+        // 1. Budget Pace & Safe Daily Allowance Signal
+        if (m.monthIncome === 0 && m.monthExpense === 0) {
+          signals.push({
+            tone: "neutral",
+            badge: "Недостатньо даних",
+            title: "Додай доходи та витрати за місяць",
+            body: "Щоб радник точно розрахував безпечний денний ліміт і вільний резерв для покупок або інвестицій, зафіксуй операції за поточний місяць.",
+            metrics: [`Баланс: ${formatUAH(m.totalBalance)}`, `Днів у періоді: ${m.remainingDays}`]
+          });
+        } else if (m.projectedMonthSurplus < 0 || m.totalBalance <= 0) {
+          const deficit = Math.abs(Math.round(m.projectedMonthSurplus));
+          signals.push({
+            tone: "danger",
+            badge: "Перевитрата темпу",
+            title: "Темп витрат перевищує місячні доходи",
+            body: `При середніх витратах ${formatUAH(m.avgDailyBurn)}/день прогнозований дефіцит до кінця місяця складе близько ${formatUAH(deficit)}. Варто поставити на паузу необов'язкові покупки та високоризикові активи.`,
+            metrics: [
+              `Витрати/день: ${formatUAH(m.avgDailyBurn)}`,
+              `Безпечний ліміт: ${formatUAH(m.safeDailyBudget)}/день`
+            ]
+          });
+        } else if (m.actualSpendRatio > m.expectedSpendRatio * 1.15) {
+          signals.push({
+            tone: "warn",
+            badge: "Прискорений темп",
+            title: "Витрати йдуть швидше за графік місяця",
+            body: `Використано ${Math.round(m.actualSpendRatio * 100)}% місячного доходу за ${m.elapsedDays} з ${m.daysInMonth} днів. Щоб зберегти прогнозований профіцит ${formatUAH(m.projectedMonthSurplus)}, тримай витрати в межах денної норми.`,
+            metrics: [
+              `Норма: ${formatUAH(m.safeDailyBudget)}/день`,
+              `Залишок днів: ${m.remainingDays}`
+            ]
+          });
+        } else {
+          signals.push({
+            tone: "good",
+            badge: "Бюджет у нормі",
+            title: "Стабільний запас ліквідності",
+            body: `Твої витрати (${formatUAH(m.avgDailyBurn)}/день) комфортно вкладаються в дохід. Прогнозований чистий залишок на кінець місяця — близько ${formatUAH(m.projectedMonthSurplus)}.`,
+            metrics: [
+              `Доступно: ${formatUAH(m.safeDailyBudget)}/день`,
+              `Прогноз профіциту: +${formatUAH(m.projectedMonthSurplus)}`
+            ]
+          });
+        }
+
+        // 2. Market Opportunity / Overheated Asset Signal (combining user surplus + live quotes)
+        const dippedAssets = marketState.quotes.filter((q) => q.change24h <= -2.5);
+        const overheatedAssets = marketState.quotes.filter((q) => q.change24h >= 6.5);
+        const canInvest = m.totalBalance > 1000 && m.projectedMonthSurplus > 500;
+        const safeAllocUah = Math.max(0, Math.round(Math.min(m.totalBalance * 0.2, m.projectedMonthSurplus * 0.25)));
+
+        if (dippedAssets.length > 0 && canInvest) {
+          const topDip = [...dippedAssets].sort((a, b) => a.change24h - b.change24h)[0];
+          signals.push({
+            tone: "good",
+            badge: "Точка входу",
+            title: `${topDip.symbol} на просадці (${topDip.change24h.toFixed(2)}% за 24 год)`,
+            body: `Оскільки твій бюджет у плюсі, корекція ${topDip.label} (${topDip.priceText}) дає можливість докупити актив дешевше без шкоди для обов'язкових витрат.`,
+            metrics: [
+              `Безпечний ліміт входу: до ${formatUAH(safeAllocUah)}`,
+              `20% від вільного резерву`
+            ]
+          });
+        } else if (overheatedAssets.length > 0) {
+          const topHot = [...overheatedAssets].sort((a, b) => b.change24h - a.change24h)[0];
+          signals.push({
+            tone: "warn",
+            badge: "Ризик перегріву",
+            title: `Не купуй ${topHot.symbol} на локальному піку (+${topHot.change24h.toFixed(2)}%)`,
+            body: `${topHot.label} різко виріс за останню добу. Вхід після імпульсного росту підвищує ризик потрапити на відкат — краще дочекатись корекції або зафіксувати частину прибутку.`,
+            metrics: [`Поточна ціна: ${topHot.priceText}`, `Зміна 24г: +${topHot.change24h.toFixed(2)}%`]
+          });
+        } else {
+          const usdQuote = marketState.quotes.find((q) => q.symbol === "USD");
+          if (usdQuote && canInvest) {
+            signals.push({
+              tone: "neutral",
+              badge: "Валютний буфер",
+              title: "Диверсифікація вільного залишку",
+              body: `Ринок без різких аномалій. При поточному курсі ${usdQuote.priceText} ти можеш безпечно перевести частину вільного профіциту у валютний резерв або стейблкоїни.`,
+              metrics: [
+                `Рекомендовано: до ${formatUAH(safeAllocUah)}`,
+                `Еквівалент: ≈ $${(safeAllocUah / (usdQuote.rawUah || 41.5)).toFixed(0)}`
+              ]
+            });
+          }
+        }
+
+        container.innerHTML = signals
+          .map(
+            (s) => `
+            <div class="advisor-card ${s.tone}">
+              <div class="advisor-head">
+                <div class="advisor-title">${escapeHTML(s.title)}</div>
+                <span class="advisor-badge">${escapeHTML(s.badge)}</span>
+              </div>
+              <div class="advisor-body">${escapeHTML(s.body)}</div>
+              <div class="advisor-metrics">
+                ${s.metrics.map((mItem) => `<span class="metric-chip tabular">${escapeHTML(mItem)}</span>`).join("")}
+              </div>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      /* ======================================================================
+         FEASIBILITY CALCULATOR ("ЧИ ВАРТО КУПУВАТИ?")
+         ====================================================================== */
+      document.querySelectorAll(".calc-mode-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          calcMode = btn.dataset.calcMode;
+          document.querySelectorAll(".calc-mode-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.calcMode === calcMode);
+          });
+
+          const assetWrap = document.getElementById("calcAssetWrap");
+          const nameInput = document.getElementById("calcNameInput");
+          if (calcMode === "invest") {
+            assetWrap.style.display = "block";
+            nameInput.placeholder = "Мета (напр. резерв)";
+          } else {
+            assetWrap.style.display = "none";
+            nameInput.placeholder = "Що плануєш купити?";
+          }
+          document.getElementById("calcResultBox").classList.remove("visible");
+        });
+      });
+
+      const calcAmountInput = document.getElementById("calcAmountInput");
+      calcAmountInput.addEventListener("input", () => {
+        calcAmountInput.value = calcAmountInput.value
+          .replace(",", ".")
+          .replace(/[^0-9.]/g, "");
+      });
+
+      document.getElementById("runFeasibilityBtn").addEventListener("click", () => {
+        const amount = parseFloat(calcAmountInput.value);
+        if (isNaN(amount) || amount <= 0) {
+          showToast("Введи суму у гривнях для розрахунку");
+          calcAmountInput.focus();
+          return;
+        }
+
+        const m = computeUserFinancialMetrics();
+        const itemName = document.getElementById("calcNameInput").value.trim();
+        const assetSymbol = document.getElementById("calcAssetSelect").value;
+        const selectedQuote = marketState.quotes.find((q) => q.symbol === assetSymbol);
+
+        const resultBox = document.getElementById("calcResultBox");
+        const verdictTitle = document.getElementById("calcVerdictTitle");
+        const verdictBadge = document.getElementById("calcVerdictBadge");
+        const verdictDetails = document.getElementById("calcVerdictDetails");
+
+        const balanceAfter = m.totalBalance - amount;
+        const pctOfBalance = m.totalBalance > 0 ? (amount / m.totalBalance) * 100 : 100;
+        const newDailySafe = Math.max(0, balanceAfter) / m.remainingDays;
+
+        const targetLabel =
+          calcMode === "invest"
+            ? `${assetSymbol}${itemName ? ` (${itemName})` : ""}`
+            : itemName || "Ця покупка";
+
+        let status = "ok"; // "ok" | "caution" | "no"
+        let badgeText = "Доцільно";
+        let explanation = "";
+
+        if (amount > m.totalBalance) {
+          status = "no";
+          badgeText = "Не вистачає коштів";
+          explanation = `${targetLabel} коштує на ${formatUAH(amount - m.totalBalance)} більше, ніж твій поточний загальний баланс (${formatUAH(m.totalBalance)}). Купівля призведе до касового розриву.`;
+        } else if (m.projectedMonthSurplus < 0 && calcMode === "purchase") {
+          status = "no";
+          badgeText = "Не варто зараз";
+          explanation = `Твій місячний бюджет уже йде в мінус (прогноз ${formatUAH(m.projectedMonthSurplus)}). Витрата ${formatUAH(amount)} знизить денний ліміт до ${formatUAH(newDailySafe)}/день при поточних витратах ${formatUAH(m.avgDailyBurn)}/день.`;
+        } else if (
+          calcMode === "invest" &&
+          selectedQuote &&
+          selectedQuote.change24h >= 6.5
+        ) {
+          status = "caution";
+          badgeText = "Перегрітий актив";
+          explanation = `Бюджет дозволяє виділити ${formatUAH(amount)} (${pctOfBalance.toFixed(1)}% балансу), але ${assetSymbol} виріс на +${selectedQuote.change24h.toFixed(2)}% за добу. Краще зайти частинами (напр. ${formatUAH(amount / 2)} зараз і решту на відкаті).`;
+        } else if (pctOfBalance > 35 || (m.monthIncome > 0 && amount > m.projectedMonthSurplus && m.projectedMonthSurplus > 0)) {
+          status = "caution";
+          badgeText = "Стисне бюджет";
+          explanation = `${targetLabel} забере ${pctOfBalance.toFixed(1)}% від усього балансу. Після списання залишиться ${formatUAH(balanceAfter)}, а безпечний ліміт на решту ${m.remainingDays} дн. впаде з ${formatUAH(m.safeDailyBudget)} до ${formatUAH(newDailySafe)}/день.`;
+        } else {
+          status = "ok";
+          badgeText = calcMode === "invest" ? "Комфортний вхід" : "В межах бюджету";
+          const marketNote =
+            calcMode === "invest" && selectedQuote
+              ? ` Поточний курс ${assetSymbol}: ${selectedQuote.priceText} (${selectedQuote.change24h >= 0 ? "+" : ""}${selectedQuote.change24h.toFixed(2)}% за 24г).`
+              : "";
+          explanation = `${targetLabel} на суму ${formatUAH(amount)} складає лише ${pctOfBalance.toFixed(1)}% твого балансу. Після операції залишиться ${formatUAH(balanceAfter)} (${formatUAH(newDailySafe)}/день до кінця місяця).${marketNote}`;
+        }
+
+        verdictTitle.textContent = targetLabel;
+        verdictBadge.className = `verdict-badge ${status}`;
+        verdictBadge.textContent = badgeText;
+        verdictDetails.textContent = explanation;
+        resultBox.classList.add("visible");
+      });
+
+      /* ======================================================================
+         LIVE DATA FETCHING (NBU + COINGECKO + CRYPTOCOMPARE NEWS)
+         ====================================================================== */
+      async function refreshMarketData(manual = false) {
+        const btn = document.getElementById("refreshMarketBtn");
+        if (btn) btn.disabled = true;
+
+        try {
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+
+          const todayStr = formatNbuDateParam(today);
+          const yesterdayStr = formatNbuDateParam(yesterday);
+
+          const [nbuTodayRes, nbuYestRes, cgRes, newsRes] = await Promise.allSettled([
+            fetch(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${todayStr}&json`),
+            fetch(`https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${yesterdayStr}&json`),
+            fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,the-open-network&vs_currencies=usd,uah&include_24hr_change=true"),
+            fetch("https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
+          ]);
+
+          let fetchedAnyLive = false;
+          const updatedQuotes = [...marketState.quotes];
+
+          // 1. Parse NBU USD & EUR
+          if (nbuTodayRes.status === "fulfilled" && nbuTodayRes.value.ok) {
+            const todayData = await nbuTodayRes.value.json();
+            let yestData = [];
+            if (nbuYestRes.status === "fulfilled" && nbuYestRes.value.ok) {
+              yestData = await nbuYestRes.value.json();
+            }
+
+            ["USD", "EUR"].forEach((cc) => {
+              const tItem = Array.isArray(todayData) ? todayData.find((x) => x.cc === cc) : null;
+              const yItem = Array.isArray(yestData) ? yestData.find((x) => x.cc === cc) : null;
+              if (tItem && typeof tItem.rate === "number") {
+                const rateNow = tItem.rate;
+                const ratePrev = yItem && typeof yItem.rate === "number" ? yItem.rate : rateNow;
+                const pctDiff = ratePrev > 0 ? ((rateNow - ratePrev) / ratePrev) * 100 : 0;
+                const uahDiff = rateNow - ratePrev;
+                const diffSign = uahDiff >= 0 ? "+" : "";
+
+                const idx = updatedQuotes.findIndex((q) => q.symbol === cc);
+                if (idx !== -1) {
+                  updatedQuotes[idx] = {
+                    symbol: cc,
+                    label: cc === "USD" ? "Долар НБУ" : "Євро НБУ",
+                    priceText: `${rateNow.toFixed(2)} ₴`,
+                    subText: `За добу: ${diffSign}${uahDiff.toFixed(2)} ₴`,
+                    change24h: pctDiff,
+                    rawUah: rateNow
+                  };
+                  fetchedAnyLive = true;
+                }
+              }
+            });
+          }
+
+          // 2. Parse CoinGecko Crypto
+          if (cgRes.status === "fulfilled" && cgRes.value.ok) {
+            const cgData = await cgRes.value.json();
+            const map = [
+              { id: "bitcoin", symbol: "BTC", label: "Bitcoin" },
+              { id: "ethereum", symbol: "ETH", label: "Ethereum" },
+              { id: "solana", symbol: "SOL", label: "Solana" },
+              { id: "the-open-network", symbol: "TON", label: "Toncoin" }
+            ];
+
+            map.forEach((coin) => {
+              const entry = cgData && cgData[coin.id];
+              if (entry && typeof entry.usd === "number") {
+                const usdFmt =
+                  entry.usd >= 1000
+                    ? `$${Math.round(entry.usd).toLocaleString("en-US")}`
+                    : `$${entry.usd.toFixed(2)}`;
+                const uahVal = typeof entry.uah === "number" ? entry.uah : entry.usd * 41.5;
+                const idx = updatedQuotes.findIndex((q) => q.symbol === coin.symbol);
+                if (idx !== -1) {
+                  updatedQuotes[idx] = {
+                    symbol: coin.symbol,
+                    label: coin.label,
+                    priceText: usdFmt,
+                    subText: `≈ ${formatUAH(Math.round(uahVal))}`,
+                    change24h: typeof entry.usd_24h_change === "number" ? entry.usd_24h_change : 0,
+                    rawUah: uahVal
+                  };
+                  fetchedAnyLive = true;
+                }
+              }
+            });
+          }
+
+          // 3. Parse CryptoCompare News
+          if (newsRes.status === "fulfilled" && newsRes.value.ok) {
+            const newsJson = await newsRes.value.json();
+            if (newsJson && Array.isArray(newsJson.Data) && newsJson.Data.length > 0) {
+              marketState.news = newsJson.Data.slice(0, 8).map((art) => {
+                const tag = classifyNewsSentiment(art.title);
+                return {
+                  title: art.title,
+                  source: art.source_info && art.source_info.name ? art.source_info.name : art.source || "Market News",
+                  url: art.url || "https://www.coingecko.com/",
+                  sentiment: tag.sentiment,
+                  sentimentLabel: tag.sentimentLabel
+                };
+              });
+              fetchedAnyLive = true;
+            }
+          }
+
+          if (fetchedAnyLive) {
+            const nowTime = new Date().toLocaleTimeString("uk-UA", {
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+            marketState.quotes = updatedQuotes;
+            marketState.isLive = true;
+            marketState.updatedAt = nowTime;
+            try {
+              localStorage.setItem(
+                MARKET_CACHE_KEY,
+                JSON.stringify({
+                  quotes: marketState.quotes,
+                  news: marketState.news,
+                  updatedAt: nowTime
+                })
+              );
+            } catch (e) {}
+            if (manual) showToast("Ринкові дані оновлено");
+          } else {
+            marketState.isLive = false;
+            if (manual) showToast("Не вдалося з'єднатися з API — показано збережені дані");
+          }
+        } catch (err) {
+          marketState.isLive = false;
+          if (manual) showToast("Помилка оновлення котирувань");
+        } finally {
+          marketState.hasLoadedOnce = true;
+          if (btn) btn.disabled = false;
+          renderMarketQuotes();
+          renderMarketNews();
+          renderAdvisor();
+        }
+      }
+
+      function initMarketCache() {
+        try {
+          const cached = localStorage.getItem(MARKET_CACHE_KEY);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed.quotes) && parsed.quotes.length > 0) {
+              marketState.quotes = parsed.quotes;
+            }
+            if (Array.isArray(parsed.news) && parsed.news.length > 0) {
+              marketState.news = parsed.news;
+            }
+            if (parsed.updatedAt) {
+              marketState.updatedAt = parsed.updatedAt;
+            }
+          }
+        } catch (e) {}
+        renderMarketQuotes();
+        renderMarketNews();
+      }
+
+      document.getElementById("refreshMarketBtn").addEventListener("click", () => {
+        refreshMarketData(true);
+      });
+
+      /* ======================================================================
          BOOTSTRAP APP
          ====================================================================== */
       initTheme();
       loadTransactions();
+      initMarketCache();
       renderAll();
     })();
   </script>
